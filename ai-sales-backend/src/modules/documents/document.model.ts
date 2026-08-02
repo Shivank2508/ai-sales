@@ -17,26 +17,25 @@ const documentSchema = new Schema({
         enum: DOCUMENT_TYPES,
         required: true
     },
-    orignalName: {
+    originalName: {
         type: String,
-        required: true
+        required: true,
     },
     storedName: {
         type: String,
-        required: true
+        required: true,
     },
-    filepath: {
+    filePath: {
         type: String,
-        required: true
+        required: true,
     },
     mimeType: {
         type: String,
-        required: true
+        required: true,
     },
     fileSize: {
         type: Number,
         required: true,
-
     },
     status: {
         type: String,

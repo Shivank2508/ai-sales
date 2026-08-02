@@ -4,6 +4,7 @@ import "dotenv/config"
 import { leadRouter } from "./modules/leads/lead.routes";
 import { productRouter } from "./modules/products/product.routes";
 import { knowledgeRouter } from "./modules/knowledge/knowledge.routes";
+import { documentRouter } from "./modules/documents/document.routes";
 
 const app = express();
 app.use(express.json());
@@ -22,6 +23,10 @@ app.use(
 app.use(
     `/knowledge`,
     knowledgeRouter
+);
+app.use(
+  `/documents`,
+  documentRouter
 );
 
 app.get("/health", (req, res) => {

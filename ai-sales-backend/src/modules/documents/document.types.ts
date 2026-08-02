@@ -20,12 +20,14 @@ export const DOCUMENT_TYPES = [
 export type DocumentType = (typeof DOCUMENT_TYPES)[number]
 
 export interface CreateDocumentInput {
-    productId: string,
-    name: string,
-    type: DocumentType,
-    orignalName: string,
-    storedName: string,
-    filepath: string,
-    mimetype: string,
-    filesize: number
+    productId: string;
+    name: string;
+    type: DocumentType;
+
+    originalName: string;
+    storedName: string;
+    filePath: string;
+    mimeType: string;
+
+    filesize: number;   // Required
 }
