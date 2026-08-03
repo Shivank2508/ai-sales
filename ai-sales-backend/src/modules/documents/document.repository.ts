@@ -42,7 +42,7 @@ export class DocumentRepository {
                     ...data,
                 },
                 {
-                    new: true,
+                    returnDocument: "after",
                 }
             )
             .lean()

@@ -29,7 +29,7 @@ export class ProductRepository {
                 id,
                 input,
                 {
-                    new: true,
+                    returnDocument: "after",
                     runValidators: true,
                 }
             )

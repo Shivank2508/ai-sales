@@ -38,14 +38,13 @@ export class LeadRepositry {
                 id,
                 input,
                 {
-                    new: true,
+                    returnDocument: "after",
                     runValidators: true,
                 }
             )
             .lean()
             .exec();
     }
-
     async deleteById(
         id: string
     ): Promise<Lead | null> {

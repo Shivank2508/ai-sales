@@ -9,6 +9,8 @@ import { DocumentType } from "./document.types";
 import { extractTextFromFile } from "./document.parser";
 import { cleanDocumentText } from "./document.cleaner";
 import { chunkText } from "./document.chunker";
+import { VectorRepository } from "../../vector/vector.repository";
+import { EmbeddingService } from "../../services/embedding.service";
 
 interface UploadDocumentInput {
     productId: string;
@@ -21,19 +23,19 @@ export class DocumentService {
     constructor(
         private readonly documentRepository = new DocumentRepository(),
         private readonly chunkRepository = new ChunkRepository(),
-        private readonly productRepository = new ProductRepository()
+        private readonly productRepository = new ProductRepository(),
+        private readonly embeddingService = new EmbeddingService(),
+        private readonly vectorRepository = new VectorRepository(),
     ) { }
 
     async uploadDocument(input: UploadDocumentInput) {
         const { productId, name, type, file } = input;
 
-        // Validate ObjectId
         if (!Types.ObjectId.isValid(productId)) {
             await this.safeDeleteFile(file.path);
             throw new Error("Invalid product ID");
         }
 
-        // Ensure product exists
         const product = await this.productRepository.findById(productId);
 
         if (!product) {
@@ -41,45 +43,51 @@ export class DocumentService {
             throw new Error("Product not found");
         }
 
-        // Create document record
-      const document = await this.documentRepository.create({
-    productId,
-    name,
-    type,
-    originalName: file.originalname,
-    storedName: file.filename,
-    filePath: file.path,
-    mimeType: file.mimetype,
-    fileSize: file.size,
-});
+        const document = await this.documentRepository.create({
+            productId,
+            name,
+            type,
+            originalName: file.originalname,
+            storedName: file.filename,
+            filePath: file.path,
+            mimeType: file.mimetype,
+            fileSize: file.size,
+        });
+
+        let savedChunks: Awaited<
+            ReturnType<ChunkRepository["createMany"]>
+        > = [];
+
+        const namespace = `product-${productId}`;
+
         try {
             await this.documentRepository.updateStatus(
                 document._id.toString(),
                 "PROCESSING"
             );
 
-            // Extract text
             const extractedText = await extractTextFromFile(
                 file.path,
                 file.mimetype
             );
 
-            // Clean text
             const cleanedText = cleanDocumentText(extractedText);
 
             if (!cleanedText.trim()) {
-                throw new Error("No text could be extracted from document");
+                throw new Error(
+                    "No text could be extracted from document"
+                );
             }
 
-            // Chunk text
             const chunks = chunkText(cleanedText);
 
             if (chunks.length === 0) {
-                throw new Error("No chunks could be created from document");
+                throw new Error(
+                    "No chunks could be created from document"
+                );
             }
 
-            // Save chunks
-            await this.chunkRepository.createMany(
+            savedChunks = await this.chunkRepository.createMany(
                 chunks.map((chunk) => ({
                     documentId: document._id.toString(),
                     productId,
@@ -91,40 +99,84 @@ export class DocumentService {
                     },
                 }))
             );
-            // Mark document ready
+
+            const embeddings =
+                await this.embeddingService.embedDocuments(
+                    savedChunks.map((chunk) => chunk.content)
+                );
+
+            if (
+                !Array.isArray(embeddings) ||
+                embeddings.length !== savedChunks.length ||
+                embeddings.some(
+                    (embedding) => !Array.isArray(embedding) || embedding.length === 0
+                )
+            ) {
+                throw new Error(
+                    "Embedding generation failed or returned an unexpected result"
+                );
+            }
+
+            const vectors = savedChunks.map((chunk, index) => ({
+                id: chunk._id.toString(),
+                values: embeddings[index],
+                metadata: {
+                    productId,
+                    documentId: document._id.toString(),
+                    chunkId: chunk._id.toString(),
+                    chunkIndex: chunk.chunkIndex,
+                    type,
+                    text: chunk.content,
+                },
+            }));
+
+            if (vectors.length === 0) {
+                throw new Error("No vectors were generated for document upload.");
+            }
+
+            await this.vectorRepository.upsert(
+                namespace,
+                vectors
+            );
+
             return await this.documentRepository.updateStatus(
                 document._id.toString(),
                 "READY",
                 {
-                    chunkCount: chunks.length,
+                    chunkCount: savedChunks.length,
                 }
             );
         } catch (error) {
-            // Remove saved chunks
-            await this.chunkRepository.deleteByDocumentId(
-                document._id.toString()
-            );
+            try {
+                if (savedChunks.length > 0) {
+                    await this.chunkRepository.deleteByDocumentId(
+                        document._id.toString()
+                    );
 
-            // Mark document failed
-            await this.documentRepository.updateStatus(
-                document._id.toString(),
-                "FAILED",
-                {
-                    errorMessage:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown processing error",
+                    // If your repository supports it, clean up vectors too.
+                    // await this.vectorRepository.delete(
+                    //     namespace,
+                    //     savedChunks.map(c => c._id.toString())
+                    // );
                 }
-            );
 
-            // Delete uploaded file
-            await this.safeDeleteFile(file.path);
+                await this.documentRepository.updateStatus(
+                    document._id.toString(),
+                    "FAILED"
+                );
+            } finally {
+                await this.safeDeleteFile(file.path);
+            }
 
-            throw error;
+            throw error instanceof Error
+                ? error
+                : new Error("Document processing failed");
         }
     }
 
-    private async safeDeleteFile(filePath: string): Promise<void> {
+    private async safeDeleteFile(
+        filePath: string
+    ): Promise<void> {
         try {
             await fs.unlink(filePath);
         } catch {

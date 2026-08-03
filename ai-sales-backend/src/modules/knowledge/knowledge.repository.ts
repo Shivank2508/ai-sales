@@ -45,7 +45,7 @@ export class KnowledgeRepository {
                 id,
                 input,
                 {
-                    new: true,
+                    returnDocument: "after",
                     runValidators: true,
                 }
             )
