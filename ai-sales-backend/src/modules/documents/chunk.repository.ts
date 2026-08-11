@@ -23,6 +23,15 @@ export class ChunkRepository {
       .lean()
       .exec();
   }
+  async findByIds(ids: string[]) {
+    return ChunkModel.find({
+      _id: {
+        $in: ids,
+      },
+    })
+      .lean()
+      .exec();
+  }
 
   async deleteByDocumentId(documentId: string) {
     return ChunkModel.deleteMany({ documentId }).exec();

@@ -5,6 +5,7 @@ import { leadRouter } from "./modules/leads/lead.routes";
 import { productRouter } from "./modules/products/product.routes";
 import { knowledgeRouter } from "./modules/knowledge/knowledge.routes";
 import { documentRouter } from "./modules/documents/document.routes";
+import chatRoutes from "./modules/chat/chat.routes";
 
 const app = express();
 app.use(express.json());
@@ -25,8 +26,15 @@ app.use(
     knowledgeRouter
 );
 app.use(
-  `/documents`,
-  documentRouter
+    `/documents`,
+    documentRouter
+);
+
+
+
+app.use(
+    "/chat",
+    chatRoutes
 );
 
 app.get("/health", (req, res) => {

@@ -32,7 +32,6 @@ export class VectorRepository {
                 includeMetadata: true,
             });
     }
-
     async deleteVector(
         namespace: string,
         id: string
