@@ -43,4 +43,70 @@ export class ProductRepository {
             .lean()
             .exec();
     }
+
+    async search(
+        searchTerm: string
+    ) {
+        const regex =
+            new RegExp(
+                searchTerm.trim(),
+                "i"
+            );
+
+        return ProductModel
+            .find({
+                $or: [
+                    {
+                        name: regex,
+                    },
+                    {
+                        description: regex,
+                    },
+                    {
+                        category: regex,
+                    },
+                ],
+            })
+            .limit(10)
+            .lean()
+            .exec();
+    }
+
+
+    async findByNames(
+        names: string[]
+    ) {
+        if (
+            !Array.isArray(names) ||
+            names.length === 0
+        ) {
+            return [];
+        }
+
+        const normalizedNames =
+            names
+                .map(name => name.trim())
+                .filter(Boolean);
+
+        if (
+            normalizedNames.length === 0
+        ) {
+            return [];
+        }
+
+        return ProductModel
+            .find({
+                name: {
+                    $in: normalizedNames.map(
+                        name =>
+                            new RegExp(
+                                `^${name}$`,
+                                "i"
+                            )
+                    ),
+                },
+            })
+            .lean()
+            .exec();
+    }
 }

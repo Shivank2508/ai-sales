@@ -1,4 +1,4 @@
-import { ChunkModel } from "./chunk.model";
+import { Chunk, ChunkModel } from "./chunk.model";
 
 export interface CreateChunkType {
   documentId: string;
@@ -23,12 +23,16 @@ export class ChunkRepository {
       .lean()
       .exec();
   }
-  async findByIds(ids: string[]) {
-    return ChunkModel.find({
-      _id: {
-        $in: ids,
-      },
-    })
+  async findByIds(
+    ids: string[]
+  ): Promise<Chunk[]> {
+
+    return ChunkModel
+      .find({
+        _id: {
+          $in: ids,
+        },
+      })
       .lean()
       .exec();
   }

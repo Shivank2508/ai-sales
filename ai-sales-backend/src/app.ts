@@ -6,6 +6,7 @@ import { productRouter } from "./modules/products/product.routes";
 import { knowledgeRouter } from "./modules/knowledge/knowledge.routes";
 import { documentRouter } from "./modules/documents/document.routes";
 import chatRoutes from "./modules/chat/chat.routes";
+import { agentRouter } from "./modules/agent/agent.routes";
 
 const app = express();
 app.use(express.json());
@@ -35,6 +36,11 @@ app.use(
 app.use(
     "/chat",
     chatRoutes
+);
+
+app.use(
+    "/api/agent",
+    agentRouter
 );
 
 app.get("/health", (req, res) => {

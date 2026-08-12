@@ -7,13 +7,32 @@ export type AgentTool =
     | "ANSWER";
 
 export interface AgentRequest {
+
     productId: string;
+
     question: string;
-    conversationId?: string
+
+    conversationId?: string;
 }
 
 export interface ToolExecutionResult {
-    tooL: AgentTool;
+
+    tool: AgentTool;
+
+    success: boolean;
+
+    data?: unknown;
+
+    error?: string;
+}
+
+export interface AgentResponse {
+    conversationId: string;
     answer: string;
-    sources: unknown[]
-}   
+
+    tool?: AgentTool;
+
+    toolResult?: unknown;
+
+    sources?: unknown[];
+}

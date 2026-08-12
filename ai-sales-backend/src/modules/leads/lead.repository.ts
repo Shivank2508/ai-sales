@@ -53,4 +53,37 @@ export class LeadRepositry {
             .lean()
             .exec();
     }
+
+
+    async search(searchTerm: string, limit = 1) {
+        const term = searchTerm.trim()
+
+        if (!term) {
+            return LeadModel
+                .find()
+                .sort({
+                    createdAt: -1,
+                })
+                .limit(limit)
+                .lean()
+                .exec();
+        }
+
+        const regex = new RegExp(term, "i");
+
+
+        return LeadModel.find({
+            $or: [
+                {
+                    name: regex,
+                },
+                {
+                    email: regex,
+                },
+                {
+                    company: regex,
+                },
+            ],
+        }).sort({ createdAt: -1, }).limit(limit).lean().exec();
+    }
 }

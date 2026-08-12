@@ -54,8 +54,9 @@ chunkSchema.index({
     productId: 1,
 });
 
-export type Chunk =
-    InferSchemaType<typeof chunkSchema>;
+export type Chunk = InferSchemaType<typeof chunkSchema>;
 
-export const ChunkModel =
-    model("Chunk", chunkSchema);
+export const ChunkModel = model<Chunk>(
+    "Chunk",
+    chunkSchema
+);

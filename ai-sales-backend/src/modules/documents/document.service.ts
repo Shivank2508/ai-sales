@@ -119,14 +119,19 @@ export class DocumentService {
 
             const vectors = savedChunks.map((chunk, index) => ({
                 id: chunk._id.toString(),
+
                 values: embeddings[index],
+
                 metadata: {
                     productId,
                     documentId: document._id.toString(),
                     chunkId: chunk._id.toString(),
                     chunkIndex: chunk.chunkIndex,
-                    type,
-                    text: chunk.content,
+
+                    content: chunk.content,
+
+                    documentName: name,
+                    documentType: type,
                 },
             }));
 

@@ -41,3 +41,21 @@ export interface ConversationDocument {
     createdAt: Date;
     updatedAt: Date;
 }
+
+
+export interface CreateChatMessageInput {
+
+    conversationId: string;
+
+    productId: string;
+
+    role: chatRole;
+
+    content: string;
+
+    tool?: string;
+
+    metadata?: {
+        toolResult?: unknown;
+    };
+}
