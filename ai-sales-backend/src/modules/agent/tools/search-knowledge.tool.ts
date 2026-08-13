@@ -3,20 +3,23 @@ import { VectorRepository } from "../../../vector/vector.repository";
 import { ChunkRepository } from "../../documents/chunk.repository";
 
 import {
+    AgentSource,
+} from "../agent.types";
+
+import {
     Tool,
     ToolContext,
 } from "./tool.interface";
 
-export interface KnowledgeSearchResult {
-    chunkId: string;
-    documentId: string;
+
+export interface KnowledgeSearchResult extends AgentSource {
+    productId: string;
     content: string;
-    score: number;
     chunkIndex: number;
 }
 
-export class SearchKnowledgeTool
-    implements Tool {
+
+export class SearchKnowledgeTool implements Tool {
 
     name = "SEARCH_KNOWLEDGE" as const;
 
@@ -42,6 +45,7 @@ export class SearchKnowledgeTool
         additionalProperties: false,
     };
 
+
     constructor(
         private readonly embeddingService =
             new EmbeddingService(),
@@ -53,15 +57,21 @@ export class SearchKnowledgeTool
             new ChunkRepository(),
     ) { }
 
+
     async execute(
         context: ToolContext,
         args: Record<string, unknown>
     ): Promise<KnowledgeSearchResult[]> {
 
+        // -----------------------------------------
+        // 1. Get question
+        // -----------------------------------------
+
         const question =
             typeof args.question === "string"
                 ? args.question
                 : context.question;
+
 
         if (!question.trim()) {
             throw new Error(
@@ -69,13 +79,28 @@ export class SearchKnowledgeTool
             );
         }
 
+
+        // -----------------------------------------
+        // 2. Create embedding
+        // -----------------------------------------
+
         const embedding =
             await this.embeddingService.embedText(
                 question
             );
 
+
+        // -----------------------------------------
+        // 3. Product namespace
+        // -----------------------------------------
+
         const namespace =
             `product-${context.productId}`;
+
+
+        // -----------------------------------------
+        // 4. Search Pinecone
+        // -----------------------------------------
 
         const searchResult =
             await this.vectorRepository.search(
@@ -84,6 +109,11 @@ export class SearchKnowledgeTool
                 5
             );
 
+
+        // -----------------------------------------
+        // 5. Handle no results
+        // -----------------------------------------
+
         if (
             !searchResult.matches ||
             searchResult.matches.length === 0
@@ -91,15 +121,30 @@ export class SearchKnowledgeTool
             return [];
         }
 
+
+        // -----------------------------------------
+        // 6. Get chunk IDs
+        // -----------------------------------------
+
         const chunkIds =
             searchResult.matches.map(
                 match => match.id
             );
 
+
+        // -----------------------------------------
+        // 7. Get chunks from MongoDB
+        // -----------------------------------------
+
         const chunks =
             await this.chunkRepository.findByIds(
                 chunkIds
             );
+
+
+        // -----------------------------------------
+        // 8. Create lookup map
+        // -----------------------------------------
 
         const chunkMap =
             new Map(
@@ -109,34 +154,60 @@ export class SearchKnowledgeTool
                 ])
             );
 
+
+        // -----------------------------------------
+        // 9. Normalize search results
+        // -----------------------------------------
+
         return searchResult.matches
+
             .map(match => {
 
                 const chunk =
                     chunkMap.get(match.id);
 
+
+                // Pinecone result exists
+                // but MongoDB chunk doesn't
                 if (!chunk) {
                     return null;
                 }
 
+
                 return {
+
+                    // Source information
                     chunkId:
                         chunk._id.toString(),
 
                     documentId:
                         chunk.documentId.toString(),
 
-                    content:
-                        chunk.content,
+                    documentName:
+                        chunk.metadata?.documentName ??
+                        "Unknown document",
+
+                    documentType:
+                        chunk.metadata?.documentType,
 
                     score:
                         match.score ?? 0,
 
+
+                    // Internal knowledge result
+                    productId:
+                        chunk.productId.toString(),
+
+                    content:
+                        chunk.content,
+
                     chunkIndex:
                         chunk.chunkIndex,
                 };
-
             })
+
+
+            // Remove missing chunks
             .filter(
                 (
                     result

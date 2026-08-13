@@ -27,12 +27,27 @@ export interface ToolExecutionResult {
 }
 
 export interface AgentResponse {
+
     conversationId: string;
+
     answer: string;
 
     tool?: AgentTool;
 
     toolResult?: unknown;
 
-    sources?: unknown[];
+    sources?: AgentSource[];
+}
+
+export interface AgentSource {
+
+    chunkId?: string;
+
+    documentId?: string;
+
+    documentName?: string;
+
+    documentType?: string;
+
+    score?: number;
 }

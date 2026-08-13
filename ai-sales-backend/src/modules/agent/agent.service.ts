@@ -2,6 +2,7 @@ import {
     AgentRequest,
     AgentResponse,
     AgentTool,
+    AgentSource,
 } from "./agent.types";
 
 import {
@@ -18,15 +19,18 @@ import {
 
 import { deepseek } from "../../services/ai.openai";
 
+
 export class AgentService {
 
     private readonly model =
         "deepseek-v4-flash";
 
+
     constructor(
         private readonly chatRepository =
             new ChatRepository()
     ) { }
+
 
     async run(
         request: AgentRequest
@@ -38,6 +42,7 @@ export class AgentService {
             conversationId,
         } = request;
 
+
         // --------------------------------
         // Validate request
         // --------------------------------
@@ -48,11 +53,13 @@ export class AgentService {
             );
         }
 
+
         if (!question?.trim()) {
             throw new Error(
                 "Question is required."
             );
         }
+
 
         // --------------------------------
         // Get / Create conversation
@@ -64,8 +71,10 @@ export class AgentService {
                 conversationId
             );
 
+
         const currentConversationId =
             conversation._id.toString();
+
 
         // --------------------------------
         // Load conversation history
@@ -78,12 +87,14 @@ export class AgentService {
                     10
                 );
 
+
         // --------------------------------
         // Build tools
         // --------------------------------
 
         const tools =
             this.buildOpenAITools();
+
 
         // --------------------------------
         // Build messages
@@ -110,6 +121,7 @@ export class AgentService {
             },
         ];
 
+
         // --------------------------------
         // Save user message
         // --------------------------------
@@ -124,6 +136,7 @@ export class AgentService {
             content:
                 question.trim(),
         });
+
 
         // --------------------------------
         // FIRST LLM CALL
@@ -140,19 +153,27 @@ export class AgentService {
 
                 tool_choice: "auto",
 
+                // Important:
+                // We currently execute one tool
+                // at a time.
+                parallel_tool_calls: false,
+
                 temperature: 0.2,
             });
+
 
         const firstMessage =
             firstResponse
                 .choices[0]
                 ?.message;
 
+
         if (!firstMessage) {
             throw new Error(
                 "No response received from DeepSeek."
             );
         }
+
 
         // --------------------------------
         // No tool required
@@ -167,6 +188,7 @@ export class AgentService {
                 firstMessage.content ??
                 "I could not generate an answer.";
 
+
             await this.chatRepository.addMessage({
 
                 conversationId:
@@ -178,6 +200,7 @@ export class AgentService {
                     answer,
             });
 
+
             return {
 
                 conversationId:
@@ -187,6 +210,7 @@ export class AgentService {
             };
         }
 
+
         // --------------------------------
         // Tool call
         // --------------------------------
@@ -194,14 +218,16 @@ export class AgentService {
         const toolCall =
             firstMessage.tool_calls[0];
 
+
         const toolName =
-            toolCall.function.name
-                as AgentTool;
+            toolCall.function.name as AgentTool;
+
 
         const tool =
             toolRegistry.get(
                 toolName
             );
+
 
         if (!tool) {
             throw new Error(
@@ -209,12 +235,14 @@ export class AgentService {
             );
         }
 
+
         // --------------------------------
         // Parse tool arguments
         // --------------------------------
 
         let argumentsObject:
             Record<string, unknown> = {};
+
 
         try {
 
@@ -231,6 +259,7 @@ export class AgentService {
             );
         }
 
+
         // --------------------------------
         // Tool context
         // --------------------------------
@@ -246,6 +275,7 @@ export class AgentService {
                 currentConversationId,
         };
 
+
         // --------------------------------
         // Execute tool
         // --------------------------------
@@ -255,6 +285,17 @@ export class AgentService {
                 context,
                 argumentsObject
             );
+
+
+        // --------------------------------
+        // Extract sources
+        // --------------------------------
+
+        const sources =
+            this.extractSources(
+                toolResult
+            );
+
 
         // --------------------------------
         // Add assistant tool call
@@ -267,9 +308,11 @@ export class AgentService {
             content:
                 firstMessage.content ?? null,
 
-            tool_calls:
-                firstMessage.tool_calls,
+            tool_calls: [
+                toolCall,
+            ],
         });
+
 
         // --------------------------------
         // Add tool result
@@ -288,6 +331,7 @@ export class AgentService {
                 ),
         });
 
+
         // --------------------------------
         // SECOND LLM CALL
         // --------------------------------
@@ -302,10 +346,12 @@ export class AgentService {
                 temperature: 0.2,
             });
 
+
         const finalMessage =
             finalResponse
                 .choices[0]
                 ?.message;
+
 
         if (!finalMessage) {
             throw new Error(
@@ -313,9 +359,15 @@ export class AgentService {
             );
         }
 
+
+        // --------------------------------
+        // Final answer
+        // --------------------------------
+
         const answer =
             finalMessage.content ??
             "I could not generate a final answer.";
+
 
         // --------------------------------
         // Save assistant answer
@@ -332,6 +384,7 @@ export class AgentService {
                 answer,
         });
 
+
         // --------------------------------
         // Final response
         // --------------------------------
@@ -347,8 +400,14 @@ export class AgentService {
                 toolName,
 
             toolResult,
+
+            sources:
+                sources.length > 0
+                    ? sources
+                    : undefined,
         };
     }
+
 
     // ==========================================
     // CONVERSATION
@@ -359,7 +418,9 @@ export class AgentService {
         conversationId?: string
     ) {
 
+        // --------------------------------
         // Existing conversation
+        // --------------------------------
 
         if (conversationId) {
 
@@ -369,11 +430,13 @@ export class AgentService {
                         conversationId
                     );
 
+
             if (!conversation) {
                 throw new Error(
                     "Conversation not found."
                 );
             }
+
 
             // Make sure conversation
             // belongs to this product
@@ -383,15 +446,20 @@ export class AgentService {
                     .toString()
                 !== productId
             ) {
+
                 throw new Error(
                     "Conversation does not belong to this product."
                 );
             }
 
+
             return conversation;
         }
 
+
+        // --------------------------------
         // Create new conversation
+        // --------------------------------
 
         return this.chatRepository
             .createConversation({
@@ -399,6 +467,7 @@ export class AgentService {
                 productId,
             });
     }
+
 
     // ==========================================
     // CONVERSATION HISTORY
@@ -430,6 +499,7 @@ export class AgentService {
                     message.content,
             }));
     }
+
 
     // ==========================================
     // SYSTEM PROMPT
@@ -496,6 +566,7 @@ Rules:
         `.trim();
     }
 
+
     // ==========================================
     // OPENAI / DEEPSEEK TOOLS
     // ==========================================
@@ -504,6 +575,7 @@ Rules:
 
         const tools =
             toolRegistry.getAll();
+
 
         return tools.map(
             tool => ({
@@ -523,5 +595,72 @@ Rules:
                 },
             })
         );
+    }
+
+
+    // ==========================================
+    // EXTRACT SOURCES
+    // ==========================================
+
+    private extractSources(
+        toolResult: unknown
+    ): AgentSource[] {
+
+        // SEARCH_KNOWLEDGE currently returns:
+        //
+        // KnowledgeSearchResult[]
+        //
+        // So we need to handle an array directly.
+
+        if (!Array.isArray(toolResult)) {
+            return [];
+        }
+
+
+        return toolResult
+
+            .filter(
+                source =>
+                    source &&
+                    typeof source === "object"
+            )
+
+            .map(source => {
+
+                const item =
+                    source as Record<
+                        string,
+                        unknown
+                    >;
+
+
+                return {
+
+                    chunkId:
+                        typeof item.chunkId === "string"
+                            ? item.chunkId
+                            : undefined,
+
+                    documentId:
+                        typeof item.documentId === "string"
+                            ? item.documentId
+                            : undefined,
+
+                    documentName:
+                        typeof item.documentName === "string"
+                            ? item.documentName
+                            : undefined,
+
+                    documentType:
+                        typeof item.documentType === "string"
+                            ? item.documentType
+                            : undefined,
+
+                    score:
+                        typeof item.score === "number"
+                            ? item.score
+                            : undefined,
+                };
+            });
     }
 }
