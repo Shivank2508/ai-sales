@@ -27,6 +27,7 @@
     "multer": "^2.2.0",
     "openai": "^7.3.0",
     "pdf-parse": "^2.4.5",
+    "sarvamai": "^1.1.8",
     "zod": "^4.4.3"
   },
   "devDependencies": {

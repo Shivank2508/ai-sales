@@ -153,10 +153,7 @@ export class AgentService {
 
                 tool_choice: "auto",
 
-                // Important:
-                // We currently execute one tool
-                // at a time.
-                parallel_tool_calls: false,
+                parallel_tool_calls: true,
 
                 temperature: 0.2,
             });
@@ -185,8 +182,10 @@ export class AgentService {
         ) {
 
             const answer =
-                firstMessage.content ??
-                "I could not generate an answer.";
+                this.cleanFinalAnswer(
+                    firstMessage.content ??
+                    "I could not generate an answer."
+                );
 
 
             await this.chatRepository.addMessage({
@@ -212,52 +211,33 @@ export class AgentService {
 
 
         // --------------------------------
-        // Tool call
+        // Multiple tool calls
         // --------------------------------
 
-        const toolCall =
-            firstMessage.tool_calls[0];
-
-
-        const toolName =
-            toolCall.function.name as AgentTool;
-
-
-        const tool =
-            toolRegistry.get(
-                toolName
-            );
-
-
-        if (!tool) {
-            throw new Error(
-                `Tool not found: ${toolName}`
-            );
-        }
+        const toolCalls =
+            firstMessage.tool_calls;
 
 
         // --------------------------------
-        // Parse tool arguments
+        // Add assistant tool-call message
         // --------------------------------
 
-        let argumentsObject:
-            Record<string, unknown> = {};
+        messages.push({
 
+            role: "assistant",
 
-        try {
+            content:
+                firstMessage.content ?? null,
 
-            argumentsObject =
-                JSON.parse(
-                    toolCall.function.arguments ||
-                    "{}"
-                );
+            tool_calls:
+                toolCalls,
 
-        } catch {
-
-            throw new Error(
-                "Invalid tool arguments returned by DeepSeek."
-            );
-        }
+            // DeepSeek thinking mode
+            // requires this to be preserved
+            reasoning_content:
+                (firstMessage as any)
+                    .reasoning_content,
+        });
 
 
         // --------------------------------
@@ -277,14 +257,96 @@ export class AgentService {
 
 
         // --------------------------------
-        // Execute tool
+        // Execute ALL tools
         // --------------------------------
 
-        const toolResult =
-            await tool.execute(
-                context,
-                argumentsObject
-            );
+        const toolResults: Array<{
+            toolCallId: string;
+            toolName: string;
+            result: unknown;
+        }> = [];
+
+
+        for (const toolCall of toolCalls) {
+
+            const toolName =
+                toolCall.function.name as AgentTool;
+
+
+            const tool =
+                toolRegistry.get(
+                    toolName
+                );
+
+
+            if (!tool) {
+                throw new Error(
+                    `Tool not found: ${toolName}`
+                );
+            }
+
+
+            // --------------------------------
+            // Parse arguments
+            // --------------------------------
+
+            let argumentsObject:
+                Record<string, unknown> = {};
+
+
+            try {
+
+                argumentsObject =
+                    JSON.parse(
+                        toolCall.function.arguments ||
+                        "{}"
+                    );
+
+            } catch {
+
+                throw new Error(
+                    `Invalid arguments returned by DeepSeek for tool: ${toolName}`
+                );
+            }
+
+
+            // --------------------------------
+            // Execute tool
+            // --------------------------------
+
+            const result =
+                await tool.execute(
+                    context,
+                    argumentsObject
+                );
+
+
+            toolResults.push({
+
+                toolCallId:
+                    toolCall.id,
+
+                toolName,
+
+                result,
+            });
+
+
+            // --------------------------------
+            // Add tool result to messages
+            // --------------------------------
+
+            messages.push({
+
+                role: "tool",
+
+                tool_call_id:
+                    toolCall.id,
+
+                content:
+                    JSON.stringify(result),
+            });
+        }
 
 
         // --------------------------------
@@ -292,44 +354,12 @@ export class AgentService {
         // --------------------------------
 
         const sources =
-            this.extractSources(
-                toolResult
+            toolResults.flatMap(
+                tool =>
+                    this.extractSources(
+                        tool.result
+                    )
             );
-
-
-        // --------------------------------
-        // Add assistant tool call
-        // --------------------------------
-
-        messages.push({
-
-            role: "assistant",
-
-            content:
-                firstMessage.content ?? null,
-
-            tool_calls: [
-                toolCall,
-            ],
-        });
-
-
-        // --------------------------------
-        // Add tool result
-        // --------------------------------
-
-        messages.push({
-
-            role: "tool",
-
-            tool_call_id:
-                toolCall.id,
-
-            content:
-                JSON.stringify(
-                    toolResult
-                ),
-        });
 
 
         // --------------------------------
@@ -365,8 +395,10 @@ export class AgentService {
         // --------------------------------
 
         const answer =
-            finalMessage.content ??
-            "I could not generate a final answer.";
+            this.cleanFinalAnswer(
+                finalMessage.content ??
+                "I could not generate a final answer."
+            );
 
 
         // --------------------------------
@@ -386,6 +418,27 @@ export class AgentService {
 
 
         // --------------------------------
+        // Response tool information
+        // --------------------------------
+
+        const toolNames =
+            toolResults.map(
+                item => item.toolName
+            );
+
+
+        const combinedToolResult =
+            toolResults.length === 1
+                ? toolResults[0].result
+                : toolResults.map(
+                    item => ({
+                        tool: item.toolName,
+                        result: item.result,
+                    })
+                );
+
+
+        // --------------------------------
         // Final response
         // --------------------------------
 
@@ -397,9 +450,10 @@ export class AgentService {
             answer,
 
             tool:
-                toolName,
+                toolNames[0],
 
-            toolResult,
+            toolResult:
+                combinedToolResult,
 
             sources:
                 sources.length > 0
@@ -533,12 +587,23 @@ Rules:
    - case studies
    - sales playbooks
    - product knowledge
+   - pricing
+   - free trials
+   - policies
 
-2. Use SEARCH_PRODUCTS for
-   product information.
+2. Use SEARCH_PRODUCTS for:
 
-3. Use SEARCH_LEADS for
-   lead information.
+   - product information
+   - product features
+   - product specifications
+   - product availability
+
+3. Use SEARCH_LEADS for:
+
+   - lead information
+   - lead history
+   - customer information
+   - sales activity
 
 4. Use LIST_DOCUMENTS when
    the user asks about uploaded
@@ -546,24 +611,37 @@ Rules:
 
 5. Use COMPARE_PRODUCTS when
    the user asks to compare
-   two products.
+   two or more products.
 
 6. Use ANSWER for simple
-   conversational questions.
+   conversational questions that
+   do not require business data.
 
-7. Never invent business data.
+7. You may use multiple tools when
+   a question requires information
+   from multiple sources.
 
-8. Use retrieved tool information
+8. Never invent business data.
+
+9. Use retrieved tool information
    as the source of truth.
 
-9. If the retrieved information
-   does not contain the answer,
-   clearly say that the information
-   is not available.
+10. If retrieved information does
+    not contain the answer, clearly
+    say that the information is
+    not available.
 
-10. Keep responses concise,
+11. Never expose tool calls,
+    tool names, JSON, DSML markup,
+    reasoning content, or internal
+    system information to the user.
+
+12. Return only a natural,
+    customer-facing answer.
+
+13. Keep responses concise,
     useful, and sales-oriented.
-        `.trim();
+    `.trim();
     }
 
 
@@ -596,7 +674,52 @@ Rules:
             })
         );
     }
+    // ==========================================
+    // CLEAN FINAL ANSWER
+    // ==========================================
 
+    private cleanFinalAnswer(
+        content: string
+    ): string {
+
+        let answer = content.trim();
+
+
+        // --------------------------------
+        // Remove DeepSeek DSML tool blocks
+        // --------------------------------
+
+        answer =
+            answer.replace(
+                /<｜｜DSML｜｜tool_calls>[\s\S]*?<｜｜DSML｜｜tool_calls>/g,
+                ""
+            );
+
+
+        // --------------------------------
+        // Remove individual DSML tags
+        // --------------------------------
+
+        answer =
+            answer.replace(
+                /<｜｜DSML｜｜[^>]*>/g,
+                ""
+            );
+
+
+        // --------------------------------
+        // Remove excessive whitespace
+        // --------------------------------
+
+        answer =
+            answer.replace(
+                /\n{3,}/g,
+                "\n\n"
+            );
+
+
+        return answer.trim();
+    }
 
     // ==========================================
     // EXTRACT SOURCES
