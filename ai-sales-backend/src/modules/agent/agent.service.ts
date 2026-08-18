@@ -22,15 +22,16 @@ import { deepseek } from "../../services/ai.openai";
 
 export class AgentService {
 
-    private readonly model =
-        "deepseek-v4-flash";
-
+    private readonly model = "deepseek-v4-flash";
 
     constructor(
-        private readonly chatRepository =
-            new ChatRepository()
+        private readonly chatRepository = new ChatRepository()
     ) { }
 
+
+    // ==========================================
+    // RUN AGENT
+    // ==========================================
 
     async run(
         request: AgentRequest
@@ -40,6 +41,7 @@ export class AgentService {
             productId,
             question,
             conversationId,
+            channel = "CHAT",
         } = request;
 
 
@@ -48,16 +50,11 @@ export class AgentService {
         // --------------------------------
 
         if (!productId) {
-            throw new Error(
-                "Product ID is required."
-            );
+            throw new Error("Product ID is required.");
         }
 
-
         if (!question?.trim()) {
-            throw new Error(
-                "Question is required."
-            );
+            throw new Error("Question is required.");
         }
 
 
@@ -71,7 +68,6 @@ export class AgentService {
                 conversationId
             );
 
-
         const currentConversationId =
             conversation._id.toString();
 
@@ -81,19 +77,17 @@ export class AgentService {
         // --------------------------------
 
         const history =
-            await this.chatRepository
-                .getRecentMessages(
-                    currentConversationId,
-                    10
-                );
+            await this.chatRepository.getRecentMessages(
+                currentConversationId,
+                10
+            );
 
 
         // --------------------------------
         // Build tools
         // --------------------------------
 
-        const tools =
-            this.buildOpenAITools();
+        const tools = this.buildOpenAITools();
 
 
         // --------------------------------
@@ -106,12 +100,10 @@ export class AgentService {
                 role: "system",
 
                 content:
-                    this.buildSystemPrompt(),
+                    this.buildSystemPrompt(channel),
             },
 
-            ...this.buildHistoryMessages(
-                history
-            ),
+            ...this.buildHistoryMessages(history),
 
             {
                 role: "user",
@@ -220,6 +212,8 @@ export class AgentService {
 
         // --------------------------------
         // Add assistant tool-call message
+        // IMPORTANT:
+        // This MUST come before tool messages
         // --------------------------------
 
         messages.push({
@@ -233,10 +227,9 @@ export class AgentService {
                 toolCalls,
 
             // DeepSeek thinking mode
-            // requires this to be preserved
+            // Preserve reasoning content if present
             reasoning_content:
-                (firstMessage as any)
-                    .reasoning_content,
+                (firstMessage as any).reasoning_content,
         });
 
 
@@ -244,8 +237,7 @@ export class AgentService {
         // Tool context
         // --------------------------------
 
-        const context:
-            ToolContext = {
+        const context: ToolContext = {
 
             productId,
 
@@ -274,9 +266,7 @@ export class AgentService {
 
 
             const tool =
-                toolRegistry.get(
-                    toolName
-                );
+                toolRegistry.get(toolName);
 
 
             if (!tool) {
@@ -298,8 +288,7 @@ export class AgentService {
 
                 argumentsObject =
                     JSON.parse(
-                        toolCall.function.arguments ||
-                        "{}"
+                        toolCall.function.arguments || "{}"
                     );
 
             } catch {
@@ -333,7 +322,10 @@ export class AgentService {
 
 
             // --------------------------------
-            // Add tool result to messages
+            // Add tool result
+            // IMPORTANT:
+            // Every tool_call MUST have a
+            // matching tool message
             // --------------------------------
 
             messages.push({
@@ -559,7 +551,42 @@ export class AgentService {
     // SYSTEM PROMPT
     // ==========================================
 
-    private buildSystemPrompt(): string {
+    private buildSystemPrompt(
+        channel: "CHAT" | "VOICE" = "CHAT"
+    ): string {
+
+        const channelInstructions =
+            channel === "VOICE"
+                ? `
+VOICE MODE:
+
+You are speaking with a sales representative during
+a live sales conversation.
+
+Keep responses short and natural for speech.
+
+Rules:
+
+- Prefer 1-3 short paragraphs.
+- Avoid markdown headings.
+- Avoid tables.
+- Avoid long bullet lists.
+- Do not use unnecessary formatting.
+- Answer directly.
+- Keep the response conversational.
+- When giving sales advice, provide a practical response
+  the salesperson can say to the customer.
+- Do not invent product, pricing, competitor, or lead data.
+- Use retrieved knowledge as the source of truth.
+`
+                : `
+CHAT MODE:
+
+Provide clear and concise answers suitable for text chat.
+
+You may use markdown when useful.
+`;
+
 
         return `
 You are an AI Sales Intelligence Agent.
@@ -641,7 +668,9 @@ Rules:
 
 13. Keep responses concise,
     useful, and sales-oriented.
-    `.trim();
+
+${channelInstructions}
+`.trim();
     }
 
 
@@ -674,6 +703,8 @@ Rules:
             })
         );
     }
+
+
     // ==========================================
     // CLEAN FINAL ANSWER
     // ==========================================
@@ -721,6 +752,7 @@ Rules:
         return answer.trim();
     }
 
+
     // ==========================================
     // EXTRACT SOURCES
     // ==========================================
@@ -733,7 +765,7 @@ Rules:
         //
         // KnowledgeSearchResult[]
         //
-        // So we need to handle an array directly.
+        // So we handle an array directly.
 
         if (!Array.isArray(toolResult)) {
             return [];

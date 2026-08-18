@@ -1,3 +1,8 @@
+import { AgentChannel } from "../agent/agent.types";
+
+export { AgentChannel };
+
+
 export interface VoiceRequest {
     productId: string;
     conversationId?: string;
@@ -9,6 +14,7 @@ export interface VoiceRequest {
      * STT happens before VoiceService.
      */
     transcript: string;
+    channel?: AgentChannel;
 }
 
 export interface VoiceResponse {
@@ -18,7 +24,13 @@ export interface VoiceResponse {
 
     answer: string;
 
+    audioBase64: string;
+
+    mimeType: string;
+
     tool?: string;
 
     toolResult?: unknown;
+
+    durationMS?: number;
 }

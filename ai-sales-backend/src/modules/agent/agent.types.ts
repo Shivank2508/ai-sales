@@ -6,6 +6,10 @@ export type AgentTool =
     | "COMPARE_PRODUCTS"
     | "ANSWER";
 
+export type AgentChannel =
+    | "CHAT"
+    | "VOICE";
+
 export interface AgentRequest {
 
     productId: string;
@@ -13,6 +17,8 @@ export interface AgentRequest {
     question: string;
 
     conversationId?: string;
+
+    channel?: AgentChannel;
 }
 
 export interface ToolExecutionResult {

@@ -15,4 +15,11 @@ router.post(
     voiceController.processVoice
 );
 
+router.post(
+    "/speak",
+    upload.single("audio"),
+    voiceController.speak
+);
+
+
 export default router;
