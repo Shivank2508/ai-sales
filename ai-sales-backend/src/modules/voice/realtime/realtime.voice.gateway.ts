@@ -16,12 +16,17 @@ import {
     SarvamTTSStreamService,
 } from "./sarvam-tts-stream.service";
 
+import {
+    SarvamSTTStreamService,
+} from "./sarvam-stt-stream.service";
+
 
 interface VoiceConnectionState {
     productId: string;
     conversationId?: string;
     languageCode: string;
     transcript: string;
+    stt?: SarvamSTTStreamService;
     tts?: SarvamTTSStreamService;
 }
 
@@ -133,6 +138,53 @@ export class RealtimeVoiceGateway {
              */
             case "start": {
 
+                const stt = new SarvamSTTStreamService({
+                    languageCode: message.languageCode ?? "hi-IN",
+                    onTranscript: (transcript, isFinal) => {
+                        const state = this.connections.get(socket)
+
+                        if (!state) {
+                            return
+                        }
+
+                        if (isFinal) {
+                            state.transcript += " " + transcript
+                        }
+
+                        this.send(socket, {
+                            type: "transcript",
+                            text: transcript,
+                            final: isFinal
+                        })
+                    },
+
+                    onSpeechStart: () => {
+                        console.log(
+                            "User started speaking"
+                        );
+                    },
+                    onSpeechEnd: async () => {
+
+                        console.log(
+                            "User stopped speaking"
+                        );
+
+                        await this.processTurn(
+                            socket
+                        );
+                    },
+
+                    onError: (error) => {
+                        this.send(
+                            socket,
+                            {
+                                type: "error",
+                                message:
+                                    error.message,
+                            }
+                        );
+                    },
+                })
                 /*
                  * If an existing session exists,
                  * close its TTS connection first.
@@ -223,6 +275,7 @@ export class RealtimeVoiceGateway {
                         languageCode,
 
                         transcript: "",
+                        stt,
 
                         tts,
                     }
@@ -254,7 +307,9 @@ export class RealtimeVoiceGateway {
                         "Voice session has not started"
                     );
                 }
-
+                state.stt?.sendAudio(
+                    message.audio
+                );
 
                 /*
                  * TODO:

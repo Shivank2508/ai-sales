@@ -90,3 +90,9 @@ temp/
 .netlify
 .env.*
 !.env.example
+
+.env
+.env.local
+ai-sales-backend/.env
+
+
