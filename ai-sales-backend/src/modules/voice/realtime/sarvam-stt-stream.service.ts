@@ -22,7 +22,7 @@ export class SarvamSTTStreamService {
     ) { }
 
 
-    connect() {
+    connect(): Promise<void> {
         const apiKey = process.env.SARVAM_API_KEY;
 
         if (!apiKey) {
@@ -40,15 +40,26 @@ export class SarvamSTTStreamService {
             vad_signals: "true",
         })
 
-        this.socket = new WebSocket(`wss://api.sarvam.ai/speech-to-text/ws?${params.toString()}`,
-            {
-                headers: {
-                    "Api-Subscription-Key": apiKey,
+        return new Promise((resolve, reject) => {
+            this.socket = new WebSocket(`wss://api.sarvam.ai/speech-to-text/ws?${params.toString()}`,
+                {
+                    headers: {
+                        "Api-Subscription-Key": apiKey,
+                    }
                 }
-            }
-        );
+            );
 
-        this.socket.on("message", (raw) => {
+            this.socket.once("open", () => {
+                console.log("Sarvam STT connected");
+                resolve();
+            });
+
+            this.socket.once("error", (error) => {
+                this.options.onError?.(error);
+                reject(error);
+            });
+
+            this.socket.on("message", (raw) => {
             try {
                 const message = JSON.parse(raw.toString())
                 if (message.type === "data") {
@@ -79,12 +90,13 @@ export class SarvamSTTStreamService {
                             )
                     );
             }
-        }
-        )
+            });
+        });
     }
 
     sendAudio(audioBase64: string) {
         if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+            console.warn("STT audio skipped: Sarvam STT is not connected");
             return;
         }
 

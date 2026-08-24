@@ -30,7 +30,7 @@ export type RealtimeServerMessage = | {
 } | {
     type: "audio";
     audio: string;
-    mimetype: string
+    mimeType: string
 } | {
     type: "error";
     message: string;

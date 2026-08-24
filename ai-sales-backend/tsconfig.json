@@ -14,7 +14,8 @@
     "noUncheckedIndexedAccess": true
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "../ai-sales-frontend/src/voice/RealtimeAudioPlayer.ts"
   ],
   "exclude": [
     "node_modules",
