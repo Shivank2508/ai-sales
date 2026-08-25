@@ -160,6 +160,14 @@ export class RealtimeVoiceClient {
         }
 
         if (!navigator.mediaDevices?.getUserMedia) {
+            throw new Error("Microphone access is not supported in this browser")
+        }
+
+        if (!this.sessionReady) {
+            throw new Error("Voice session is not ready yet")
+        }
+
+        if (!navigator.mediaDevices?.getUserMedia) {
             throw new Error("Microphone access is not supported in this browser");
         }
 

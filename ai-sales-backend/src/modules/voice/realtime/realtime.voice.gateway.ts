@@ -276,6 +276,7 @@ export class RealtimeVoiceGateway {
 
                 this.connections.set(
                     socket,
+<<<<<<< HEAD
                     state
                 );
 
@@ -289,6 +290,29 @@ export class RealtimeVoiceGateway {
                 await Promise.all([
                     stt.connect(),
                     state.tts.connect(),
+=======
+                    {
+                        productId:
+                            message.productId,
+
+                        conversationId:
+                            message.conversationId,
+
+                        languageCode,
+
+                        transcript: "",
+                        processingTurn: false,
+                        speechEndAttempts: 0,
+                        stt,
+
+                        tts,
+                    }
+                );
+
+                await Promise.all([
+                    stt.connect(),
+                    tts.connect(),
+>>>>>>> 536550350b4b35da11339aaac92e7790d49ece96
                 ]);
                 this.send(socket, {
                     type: "ready",
@@ -460,10 +484,72 @@ export class RealtimeVoiceGateway {
             }
             return;
         }
+<<<<<<< HEAD
+=======
 
         state.processingTurn = true;
 
         try {
+            /*
+             * Tell client that AI is thinking
+             */
+            this.send(
+                socket,
+                {
+                    type: "thinking",
+                }
+            );
+>>>>>>> 536550350b4b35da11339aaac92e7790d49ece96
+
+        state.processingTurn = true;
+
+<<<<<<< HEAD
+        try {
+=======
+        /*
+         * Generate AI response
+         */
+            const response =
+                await this.voiceService.generateAnswer(
+                    state.productId,
+                    state.transcript,
+                    state.conversationId
+                );
+
+
+        /*
+         * Save conversation ID
+         */
+        state.conversationId =
+            response.conversationId;
+
+
+        /*
+         * Send text answer to client
+         */
+        this.send(
+            socket,
+            {
+                type: "answer",
+                text: response.answer,
+            }
+        );
+
+
+        /*
+         * Send answer to streaming TTS
+         */
+        if (state.tts) {
+
+            state.tts.sendText(
+                response.answer
+            );
+
+            state.tts.flush();
+
+        } else {
+
+>>>>>>> 536550350b4b35da11339aaac92e7790d49ece96
             /*
              * Tell client that AI is thinking
              */
@@ -560,6 +646,38 @@ export class RealtimeVoiceGateway {
             return nextText;
         }
 
+<<<<<<< HEAD
+=======
+        /*
+         * Clear transcript for next turn.
+         */
+            state.transcript = "";
+        } finally {
+            state.processingTurn = false;
+        }
+    }
+
+    private handleTurnError(socket: WebSocket, error: unknown) {
+        console.error("Realtime voice turn failed:", error);
+        this.send(socket, {
+            type: "error",
+            message: error instanceof Error ? error.message : "Voice turn failed",
+        });
+    }
+
+    private appendTranscript(current: string, next: string): string {
+        const currentText = current.trim();
+        const nextText = next.trim();
+
+        if (!nextText || currentText === nextText) {
+            return currentText;
+        }
+
+        if (!currentText) {
+            return nextText;
+        }
+
+>>>>>>> 536550350b4b35da11339aaac92e7790d49ece96
         if (nextText.startsWith(currentText)) {
             return nextText;
         }
