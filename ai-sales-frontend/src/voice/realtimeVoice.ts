@@ -8,6 +8,7 @@ export interface RealtimeVoiceCallbacks {
     onAudio?: (audioBase64: string, mimeType: string) => void
     onDone?: () => void
     onError?: (error: string) => void
+    onInterrupt?: () => void
 }
 
 export class RealtimeVoiceClient {
@@ -126,6 +127,11 @@ export class RealtimeVoiceClient {
                     this.callbacks.onDone?.()
                     break
 
+                case "interrupt":
+                    this.audioPlayer.stop()
+                    this.callbacks.onInterrupt?.()
+                    break
+
                 case "error":
                     console.error("[voice] server error", message.message)
                     this.callbacks.onError?.(message.message)
@@ -154,17 +160,36 @@ export class RealtimeVoiceClient {
         }
 
         if (!navigator.mediaDevices?.getUserMedia) {
-            throw new Error("Microphone access is not supported in this browser")
+            throw new Error("Microphone access is not supported in this browser");
         }
 
-        this.microphoneStream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-                channelCount: 1,
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true
+        try {
+            this.microphoneStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    channelCount: 1,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+        } catch (initialErr) {
+            console.warn("[voice] Retrying getUserMedia with basic audio constraints...", initialErr);
+            try {
+                this.microphoneStream = await navigator.mediaDevices.getUserMedia({
+                    audio: true
+                });
+            } catch (fallbackErr) {
+                console.error("[voice] getUserMedia failed:", fallbackErr);
+                const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+                const hasMic = devices.some(d => d.kind === "audioinput");
+
+                if (!hasMic) {
+                    throw new Error("No microphone hardware found. Please connect a microphone/headphones and check macOS System Settings > Sound > Input.");
+                }
+
+                throw new Error("Microphone device not found or access denied. Please check browser site settings and macOS System Settings > Privacy & Security > Microphone.");
             }
-        })
+        }
 
         this.audioContext = new AudioContext({ sampleRate: 16000 })
 

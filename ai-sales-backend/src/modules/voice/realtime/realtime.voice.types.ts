@@ -36,6 +36,8 @@ export type RealtimeServerMessage = | {
     message: string;
 } | {
     type: "done"
-}
+} | {
+    type: "interrupt";
+};
 
 

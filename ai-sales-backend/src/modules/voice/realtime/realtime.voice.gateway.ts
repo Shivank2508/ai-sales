@@ -19,8 +19,10 @@ import {
 import {
     SarvamSTTStreamService,
 } from "./sarvam-stt-stream.service";
-import { audio } from "sarvamai";
-import { error } from "node:console";
+import { VoiceLatencyService } from "./voice-latency.service";
+import { VoiceLatencyMetrics } from "./voice-latency.types";
+
+
 
 
 interface VoiceConnectionState {
@@ -33,11 +35,14 @@ interface VoiceConnectionState {
     speechEndAttempts: number;
     stt?: SarvamSTTStreamService;
     tts?: SarvamTTSStreamService;
+    ttsGeneration: number;
+    latency: VoiceLatencyMetrics;
 }
 
 
 export class RealtimeVoiceGateway {
-
+    private readonly latencyService =
+        new VoiceLatencyService();
     private readonly voiceService =
         new RealtimeVoiceService();
 
@@ -170,6 +175,30 @@ export class RealtimeVoiceGateway {
                         console.log(
                             "User started speaking"
                         );
+                        const state = this.connections.get(socket);
+                        if (state) {
+                            state.ttsGeneration += 1;
+                            state.tts?.close();
+                            state.tts = this.createTTS(
+                                socket,
+                                state.languageCode,
+                                state.ttsGeneration
+                            );
+                            void state.tts.connect().catch((err) => {
+                                console.error(
+                                    "Failed to reconnect TTS on speech start interrupt:",
+                                    err
+                                );
+                            });
+
+                            state.latency = {
+                                ...this.latencyService
+                                    .createMetrics(),
+
+                                speechStartAt:
+                                    Date.now(),
+                            };
+                        }
                         this.send(
                             socket,
                             {
@@ -227,36 +256,39 @@ export class RealtimeVoiceGateway {
                     message.languageCode ??
                     "hi-IN";
 
+                const state: VoiceConnectionState = {
+                    productId:
+                        message.productId,
 
-                const tts = this.createTTS(socket, languageCode);
+                    conversationId:
+                        message.conversationId,
 
+                    languageCode,
 
-                /*
-                 * Store connection state
-                 */
+                    transcript: "",
+                    processingTurn: false,
+                    speechEndAttempts: 0,
+                    ttsGeneration: 0,
+                    stt,
+                    tts: undefined,
+                    latency: this.latencyService.createMetrics(),
+                };
+
                 this.connections.set(
                     socket,
-                    {
-                        productId:
-                            message.productId,
-
-                        conversationId:
-                            message.conversationId,
-
-                        languageCode,
-
-                        transcript: "",
-                        processingTurn: false,
-                        speechEndAttempts: 0,
-                        stt,
-
-                        tts,
-                    }
+                    state
                 );
+
+                state.tts =
+                    this.createTTS(
+                        socket,
+                        state.languageCode,
+                        state.ttsGeneration
+                    );
 
                 await Promise.all([
                     stt.connect(),
-                    tts.connect(),
+                    state.tts.connect(),
                 ]);
                 this.send(socket, {
                     type: "ready",
@@ -334,15 +366,23 @@ export class RealtimeVoiceGateway {
 
 
                 /*
-                 * Stop current TTS stream.
-                 *
-                 * If your TTS service later has
-                 * an explicit interrupt/clear method,
-                 * use that instead.
+                 * Stop current TTS stream and increment generation
+                 * to ignore any late audio frames from previous stream.
                  */
+                state.ttsGeneration += 1;
                 state.tts?.close();
                 state.tts =
-                    this.createTTS(socket, state.languageCode);
+                    this.createTTS(
+                        socket,
+                        state.languageCode,
+                        state.ttsGeneration
+                    );
+                void state.tts.connect().catch((err) => {
+                    console.error(
+                        "Failed to reconnect TTS on interrupt:",
+                        err
+                    );
+                });
 
                 break;
             }
@@ -357,22 +397,28 @@ export class RealtimeVoiceGateway {
         }
     }
 
-    private createTTS(socket: WebSocket, languageCode: string) {
+    private createTTS(socket: WebSocket, languageCode: string, generation: number): SarvamTTSStreamService {
         const tts = new SarvamTTSStreamService({
             languageCode,
             speaker: "shubh",
             onAudio: (audio, mimeType) => {
-                this.send(socket, { type: "audio", audio, mimeType })
+                const state = this.connections.get(socket);
+                if (!state) { return; }
+                if (state.ttsGeneration !== generation) { return; }
+                this.send(socket, { type: "audio", audio, mimeType });
             },
             onComplete: () => {
-                this.send(socket, { type: "done" })
+                const state = this.connections.get(socket);
+                if (!state || state.ttsGeneration !== generation) { return; }
+                this.send(socket, { type: "done" });
             },
             onError: (error) => {
-                this.send(socket, { type: "error", message: error.message })
+                const state = this.connections.get(socket);
+                if (!state || state.ttsGeneration !== generation) { return; }
+                this.send(socket, { type: "error", message: error.message });
             }
-        })
-        tts.connect();
-        return tts
+        });
+        return tts;
     }
     private async processTurn(
         socket: WebSocket
