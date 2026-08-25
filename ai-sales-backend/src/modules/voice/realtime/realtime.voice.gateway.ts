@@ -19,6 +19,8 @@ import {
 import {
     SarvamSTTStreamService,
 } from "./sarvam-stt-stream.service";
+import { audio } from "sarvamai";
+import { error } from "node:console";
 
 
 interface VoiceConnectionState {
@@ -26,6 +28,9 @@ interface VoiceConnectionState {
     conversationId?: string;
     languageCode: string;
     transcript: string;
+    processingTurn: boolean;
+    speechEndTimer?: ReturnType<typeof setTimeout>;
+    speechEndAttempts: number;
     stt?: SarvamSTTStreamService;
     tts?: SarvamTTSStreamService;
 }
@@ -148,7 +153,10 @@ export class RealtimeVoiceGateway {
                         }
 
                         if (isFinal) {
-                            state.transcript += " " + transcript
+                            state.transcript = this.appendTranscript(
+                                state.transcript,
+                                transcript
+                            );
                         }
 
                         this.send(socket, {
@@ -162,16 +170,34 @@ export class RealtimeVoiceGateway {
                         console.log(
                             "User started speaking"
                         );
+                        this.send(
+                            socket,
+                            {
+                                type: "interrupt",
+                            }
+                        );
                     },
-                    onSpeechEnd: async () => {
+                    onSpeechEnd: () => {
 
                         console.log(
                             "User stopped speaking"
                         );
 
-                        await this.processTurn(
-                            socket
-                        );
+                        const state = this.connections.get(socket);
+                        if (!state) {
+                            return;
+                        }
+
+                        if (state.speechEndTimer) {
+                            clearTimeout(state.speechEndTimer);
+                        }
+
+                        state.speechEndAttempts = 0;
+                        state.speechEndTimer = setTimeout(() => {
+                            void this.processTurn(socket).catch((error) => {
+                                this.handleTurnError(socket, error);
+                            });
+                        }, 300);
                     },
 
                     onError: (error) => {
@@ -202,62 +228,7 @@ export class RealtimeVoiceGateway {
                     "hi-IN";
 
 
-                const tts =
-                    new SarvamTTSStreamService({
-
-                        languageCode,
-
-                        speaker: "shubh",
-
-
-                        /*
-                         * TTS audio chunk
-                         */
-                        onAudio: (
-                            audio,
-                            mimeType
-                        ) => {
-
-                            this.send(
-                                socket,
-                                {
-                                    type: "audio",
-                                    audio,
-                                    mimeType,
-                                }
-                            );
-                        },
-
-
-                        /*
-                         * TTS completed
-                         */
-                        onComplete: () => {
-
-                            this.send(
-                                socket,
-                                {
-                                    type: "done",
-                                }
-                            );
-                        },
-
-
-                        /*
-                         * TTS error
-                         */
-                        onError: (error) => {
-
-                            this.send(
-                                socket,
-                                {
-                                    type: "error",
-                                    message:
-                                        error.message,
-                                }
-                            );
-                        },
-                    });
+                const tts = this.createTTS(socket, languageCode);
 
 
                 /*
@@ -275,17 +246,22 @@ export class RealtimeVoiceGateway {
                         languageCode,
 
                         transcript: "",
+                        processingTurn: false,
+                        speechEndAttempts: 0,
                         stt,
 
                         tts,
                     }
                 );
 
-
-                /*
-                 * Connect TTS
-                 */
-                tts.connect();
+                await Promise.all([
+                    stt.connect(),
+                    tts.connect(),
+                ]);
+                this.send(socket, {
+                    type: "ready",
+                    conversationId: message.conversationId ?? "",
+                });
 
                 break;
             }
@@ -365,6 +341,8 @@ export class RealtimeVoiceGateway {
                  * use that instead.
                  */
                 state.tts?.close();
+                state.tts =
+                    this.createTTS(socket, state.languageCode);
 
                 break;
             }
@@ -379,7 +357,23 @@ export class RealtimeVoiceGateway {
         }
     }
 
-
+    private createTTS(socket: WebSocket, languageCode: string) {
+        const tts = new SarvamTTSStreamService({
+            languageCode,
+            speaker: "shubh",
+            onAudio: (audio, mimeType) => {
+                this.send(socket, { type: "audio", audio, mimeType })
+            },
+            onComplete: () => {
+                this.send(socket, { type: "done" })
+            },
+            onError: (error) => {
+                this.send(socket, { type: "error", message: error.message })
+            }
+        })
+        tts.connect();
+        return tts
+    }
     private async processTurn(
         socket: WebSocket
     ) {
@@ -397,86 +391,138 @@ export class RealtimeVoiceGateway {
             );
         }
 
+        state.speechEndTimer = undefined;
 
-        /*
-         * Don't process empty transcript
-         */
-        if (!state.transcript.trim()) {
+        if (state.processingTurn) {
+            console.log("Skipping speech turn: another turn is processing");
             return;
         }
 
 
         /*
-         * Tell client that AI is thinking
+         * Don't process empty transcript
          */
-        this.send(
-            socket,
-            {
-                type: "thinking",
+        if (!state.transcript.trim()) {
+            console.log("Skipping speech turn: no transcript received");
+            if (state.speechEndAttempts < 3) {
+                state.speechEndAttempts += 1;
+                state.speechEndTimer = setTimeout(() => {
+                    void this.processTurn(socket).catch((error) => {
+                        this.handleTurnError(socket, error);
+                    });
+                }, 300);
             }
-        );
+            return;
+        }
 
+        state.processingTurn = true;
 
-        /*
-         * Generate AI response
-         */
-        const response =
-            await this.voiceService.generateAnswer(
-                state.productId,
-                state.transcript,
-                state.conversationId
-            );
-
-
-        /*
-         * Save conversation ID
-         */
-        state.conversationId =
-            response.conversationId;
-
-
-        /*
-         * Send text answer to client
-         */
-        this.send(
-            socket,
-            {
-                type: "answer",
-                text: response.answer,
-            }
-        );
-
-
-        /*
-         * Send answer to streaming TTS
-         */
-        if (state.tts) {
-
-            state.tts.sendText(
-                response.answer
-            );
-
-            state.tts.flush();
-
-        } else {
-
+        try {
             /*
-             * If TTS is not available,
-             * complete the turn immediately.
+             * Tell client that AI is thinking
              */
             this.send(
                 socket,
                 {
-                    type: "done",
+                    type: "thinking",
                 }
             );
+
+
+            /*
+             * Generate AI response
+             */
+            const response =
+                await this.voiceService.generateAnswer(
+                    state.productId,
+                    state.transcript,
+                    state.conversationId
+                );
+
+
+            /*
+             * Save conversation ID
+             */
+            state.conversationId =
+                response.conversationId;
+
+
+            /*
+             * Send text answer to client
+             */
+            this.send(
+                socket,
+                {
+                    type: "answer",
+                    text: response.answer,
+                }
+            );
+
+
+            /*
+             * Send answer to streaming TTS
+             */
+            if (state.tts) {
+
+                state.tts.sendText(
+                    response.answer
+                );
+
+                state.tts.flush();
+
+            } else {
+
+                /*
+                 * If TTS is not available,
+                 * complete the turn immediately.
+                 */
+                this.send(
+                    socket,
+                    {
+                        type: "done",
+                    }
+                );
+            }
+
+
+            /*
+             * Clear transcript for next turn.
+             */
+            state.transcript = "";
+        } finally {
+            state.processingTurn = false;
+        }
+    }
+
+    private handleTurnError(socket: WebSocket, error: unknown) {
+        console.error("Realtime voice turn failed:", error);
+        this.send(socket, {
+            type: "error",
+            message: error instanceof Error ? error.message : "Voice turn failed",
+        });
+    }
+
+    private appendTranscript(current: string, next: string): string {
+        const currentText = current.trim();
+        const nextText = next.trim();
+
+        if (!nextText || currentText === nextText) {
+            return currentText;
         }
 
+        if (!currentText) {
+            return nextText;
+        }
 
-        /*
-         * Clear transcript for next turn.
-         */
-        state.transcript = "";
+        if (nextText.startsWith(currentText)) {
+            return nextText;
+        }
+
+        if (currentText.endsWith(nextText)) {
+            return currentText;
+        }
+
+        return `${currentText} ${nextText}`;
     }
 
 

@@ -18,6 +18,7 @@ import {
 } from "../chat/chat.repository";
 
 import { deepseek } from "../../services/ai.openai";
+import { ProductRepository } from "../products/product.repository";
 
 
 export class AgentService {
@@ -25,7 +26,8 @@ export class AgentService {
     private readonly model = "deepseek-v4-flash";
 
     constructor(
-        private readonly chatRepository = new ChatRepository()
+        private readonly chatRepository = new ChatRepository(),
+        private readonly productRepository = new ProductRepository()
     ) { }
 
 
@@ -55,6 +57,12 @@ export class AgentService {
 
         if (!question?.trim()) {
             throw new Error("Question is required.");
+        }
+
+        const product = await this.productRepository.findById(productId);
+
+        if (!product) {
+            throw new Error("Product not found.");
         }
 
 
@@ -102,6 +110,12 @@ export class AgentService {
                 content:
                     this.buildSystemPrompt(channel),
             },
+
+                    {
+                    role: "system",
+                    content: `Current product context (use this when the user says "this product"):
+            ${JSON.stringify(product)}`,
+                    },
 
             ...this.buildHistoryMessages(history),
 

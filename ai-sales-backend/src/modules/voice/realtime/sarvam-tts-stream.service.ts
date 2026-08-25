@@ -20,7 +20,7 @@ export class SarvamTTSStreamService {
         private readonly options: SarvamTTSStreamOptions
     ) { }
 
-    connect(): void {
+    connect(): Promise<void> {
         const apiKey = process.env.SARVAM_API_KEY;
         if (!apiKey) {
             throw new Error(
@@ -35,33 +35,35 @@ export class SarvamTTSStreamService {
                 "true",
         })
 
-        this.socket = new WebSocket(`wss://api.sarvam.ai/text-to-speech/ws?${params.toString()}`,
-            {
-                headers: {
-                    "Api-Subscription-Key":
-                        apiKey,
-                },
-            }
-        )
+        return new Promise((resolve, reject) => {
+            this.socket = new WebSocket(`wss://api.sarvam.ai/text-to-speech/ws?${params.toString()}`,
+                {
+                    headers: {
+                        "Api-Subscription-Key":
+                            apiKey,
+                    },
+                }
+            )
 
-        this.socket.on("open", () => {
-            this.configure();
-        })
+            this.socket.on("open", () => {
+                this.configure();
+                console.log("Sarvam TTS connected");
+                resolve();
+            })
 
-        this.socket.on("message", (raw) => {
-            this.handleMessage(raw.toString())
-        })
+            this.socket.on("message", (raw) => {
+                this.handleMessage(raw.toString())
+            })
 
-        this.socket.on(
-            "error",
-            (error) => {
+            this.socket.once("error", (error) => {
                 this.options.onError?.(error);
-            }
-        );
+                reject(error);
+            });
 
-        this.socket.on("close", () => {
-            this.configured = false
-        })
+            this.socket.on("close", () => {
+                this.configured = false
+            })
+        });
     }
 
 
