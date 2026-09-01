@@ -1,3 +1,5 @@
+import { VoiceLatencyResult } from "./voice-latency.types";
+
 export type RealtimeClientMessage = | {
     type: "start";
     productId: string;
@@ -36,6 +38,7 @@ export type RealtimeServerMessage = | {
     message: string;
 } | {
     type: "done"
+    latency?: VoiceLatencyResult;
 } | {
     type: "interrupt";
 };

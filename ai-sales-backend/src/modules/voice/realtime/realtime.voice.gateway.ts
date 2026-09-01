@@ -1,24 +1,8 @@
-import {
-    WebSocket,
-    WebSocketServer,
-} from "ws";
-
-import {
-    RealtimeVoiceService,
-} from "./realtime.voice.service";
-
-import {
-    RealtimeClientMessage,
-    RealtimeServerMessage,
-} from "./realtime.voice.types";
-
-import {
-    SarvamTTSStreamService,
-} from "./sarvam-tts-stream.service";
-
-import {
-    SarvamSTTStreamService,
-} from "./sarvam-stt-stream.service";
+import { WebSocket, WebSocketServer, } from "ws";
+import { RealtimeVoiceService, } from "./realtime.voice.service";
+import { RealtimeClientMessage, RealtimeServerMessage, } from "./realtime.voice.types";
+import { SarvamTTSStreamService, } from "./sarvam-tts-stream.service";
+import { SarvamSTTStreamService, } from "./sarvam-stt-stream.service";
 import { VoiceLatencyService } from "./voice-latency.service";
 import { VoiceLatencyMetrics } from "./voice-latency.types";
 
@@ -90,8 +74,6 @@ export class RealtimeVoiceGateway {
                         }
                     }
                 );
-
-
                 socket.on(
                     "close",
                     () => {
@@ -162,6 +144,11 @@ export class RealtimeVoiceGateway {
                                 state.transcript,
                                 transcript
                             );
+
+
+                            state.latency
+                                .transcriptReceivedAt =
+                                Date.now();
                         }
 
                         this.send(socket, {
@@ -220,7 +207,8 @@ export class RealtimeVoiceGateway {
                         if (state.speechEndTimer) {
                             clearTimeout(state.speechEndTimer);
                         }
-
+                        state.latency.speechEndAt =
+                            Date.now();
                         state.speechEndAttempts = 0;
                         state.speechEndTimer = setTimeout(() => {
                             void this.processTurn(socket).catch((error) => {
@@ -276,7 +264,6 @@ export class RealtimeVoiceGateway {
 
                 this.connections.set(
                     socket,
-<<<<<<< HEAD
                     state
                 );
 
@@ -290,29 +277,6 @@ export class RealtimeVoiceGateway {
                 await Promise.all([
                     stt.connect(),
                     state.tts.connect(),
-=======
-                    {
-                        productId:
-                            message.productId,
-
-                        conversationId:
-                            message.conversationId,
-
-                        languageCode,
-
-                        transcript: "",
-                        processingTurn: false,
-                        speechEndAttempts: 0,
-                        stt,
-
-                        tts,
-                    }
-                );
-
-                await Promise.all([
-                    stt.connect(),
-                    tts.connect(),
->>>>>>> 536550350b4b35da11339aaac92e7790d49ece96
                 ]);
                 this.send(socket, {
                     type: "ready",
@@ -428,13 +392,22 @@ export class RealtimeVoiceGateway {
             onAudio: (audio, mimeType) => {
                 const state = this.connections.get(socket);
                 if (!state) { return; }
+                if (state.latency.firstAudioAt === undefined) {
+                    state.latency.firstAudioAt = Date.now();
+                    const metrics = this.latencyService.calculate(state.latency);
+                    console.log("VOICE LATENCY", metrics);
+                }
                 if (state.ttsGeneration !== generation) { return; }
                 this.send(socket, { type: "audio", audio, mimeType });
             },
             onComplete: () => {
                 const state = this.connections.get(socket);
                 if (!state || state.ttsGeneration !== generation) { return; }
-                this.send(socket, { type: "done" });
+                state.latency.turnCompletedAt = Date.now();
+                const metrics = this.latencyService.calculate(state.latency);
+                console.log("VOICE TURN COMPLETE", metrics);
+
+                this.send(socket, { type: "done", latency: metrics });
             },
             onError: (error) => {
                 const state = this.connections.get(socket);
@@ -484,72 +457,11 @@ export class RealtimeVoiceGateway {
             }
             return;
         }
-<<<<<<< HEAD
-=======
 
         state.processingTurn = true;
-
+        state.latency.agentStartAt =
+            Date.now();
         try {
-            /*
-             * Tell client that AI is thinking
-             */
-            this.send(
-                socket,
-                {
-                    type: "thinking",
-                }
-            );
->>>>>>> 536550350b4b35da11339aaac92e7790d49ece96
-
-        state.processingTurn = true;
-
-<<<<<<< HEAD
-        try {
-=======
-        /*
-         * Generate AI response
-         */
-            const response =
-                await this.voiceService.generateAnswer(
-                    state.productId,
-                    state.transcript,
-                    state.conversationId
-                );
-
-
-        /*
-         * Save conversation ID
-         */
-        state.conversationId =
-            response.conversationId;
-
-
-        /*
-         * Send text answer to client
-         */
-        this.send(
-            socket,
-            {
-                type: "answer",
-                text: response.answer,
-            }
-        );
-
-
-        /*
-         * Send answer to streaming TTS
-         */
-        if (state.tts) {
-
-            state.tts.sendText(
-                response.answer
-            );
-
-            state.tts.flush();
-
-        } else {
-
->>>>>>> 536550350b4b35da11339aaac92e7790d49ece96
             /*
              * Tell client that AI is thinking
              */
@@ -571,7 +483,8 @@ export class RealtimeVoiceGateway {
                     state.conversationId
                 );
 
-
+            state.latency.agentEndAt =
+                Date.now();
             /*
              * Save conversation ID
              */
@@ -595,7 +508,8 @@ export class RealtimeVoiceGateway {
              * Send answer to streaming TTS
              */
             if (state.tts) {
-
+                state.latency.ttsStartAt =
+                    Date.now();
                 state.tts.sendText(
                     response.answer
                 );
@@ -646,38 +560,6 @@ export class RealtimeVoiceGateway {
             return nextText;
         }
 
-<<<<<<< HEAD
-=======
-        /*
-         * Clear transcript for next turn.
-         */
-            state.transcript = "";
-        } finally {
-            state.processingTurn = false;
-        }
-    }
-
-    private handleTurnError(socket: WebSocket, error: unknown) {
-        console.error("Realtime voice turn failed:", error);
-        this.send(socket, {
-            type: "error",
-            message: error instanceof Error ? error.message : "Voice turn failed",
-        });
-    }
-
-    private appendTranscript(current: string, next: string): string {
-        const currentText = current.trim();
-        const nextText = next.trim();
-
-        if (!nextText || currentText === nextText) {
-            return currentText;
-        }
-
-        if (!currentText) {
-            return nextText;
-        }
-
->>>>>>> 536550350b4b35da11339aaac92e7790d49ece96
         if (nextText.startsWith(currentText)) {
             return nextText;
         }
