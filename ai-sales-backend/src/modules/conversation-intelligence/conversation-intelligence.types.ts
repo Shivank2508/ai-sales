@@ -62,3 +62,17 @@ export interface ConversationAnalysis {
     nextBestAction: string,
     confidence: number
 }
+
+export interface ConversationTranscriptMessage {
+    role: | "user" | "assistant";
+    content: string;
+    createdAt?: Date
+}
+
+export interface ConversationTranscript {
+    conversationId: string;
+    productId: string;
+    messages: ConversationTranscriptMessage[];
+    text: string
+}
+

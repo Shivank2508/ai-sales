@@ -1,4 +1,4 @@
-import { Document, Schema, Types } from "mongoose";
+import { Document, model, Schema, Types } from "mongoose";
 import { ConversationIntent, ConversationOutcome, ConversationSentiment, ObjectionType } from "./conversation-intelligence.types";
 
 
@@ -125,5 +125,22 @@ const conversationIntelligenceSchema = new Schema({
     competitorMentions: {
         type: [String],
         default: []
+    },
+    nextBestAction: {
+        type: String,
+        required: true
+    },
+    consfidance: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 1,
     }
+}, {
+    timestamps: true
 })
+
+
+export const ConversationIntelligenceModel = model<ConversationIntelligenceDocument>(
+    "ConversationIntelligence", conversationIntelligenceSchema
+)
