@@ -60,36 +60,36 @@ export class SarvamSTTStreamService {
             });
 
             this.socket.on("message", (raw) => {
-            try {
-                const message = JSON.parse(raw.toString())
-                if (message.type === "data") {
-                    const transcript = message.data?.transcript;
-                    if (transcript) {
-                        this.options.onTranscript(transcript, true)
+                try {
+                    const message = JSON.parse(raw.toString())
+                    if (message.type === "data") {
+                        const transcript = message.data?.transcript;
+                        if (transcript) {
+                            this.options.onTranscript(transcript, true)
+                        }
                     }
+
+                    if (message.type === "events") {
+                        const signal = message.data?.signal_type
+
+                        if (signal === "START_SPEECH") {
+                            this.options.onSpeechStart?.()
+                        }
+                        if (signal === "END_SPEECH") {
+                            this.options.onSpeechEnd?.()
+                        }
+                    }
+                } catch (error) {
+
+                    this.options
+                        .onError?.(
+                            error instanceof Error
+                                ? error
+                                : new Error(
+                                    "Invalid Sarvam STT message"
+                                )
+                        );
                 }
-
-                if (message.type === "events") {
-                    const signal = message.data?.signal_type
-
-                    if (signal === "START_SPEECH") {
-                        this.options.onSpeechStart?.()
-                    }
-                    if (signal === "END_SPEECH") {
-                        this.options.onSpeechEnd?.()
-                    }
-                }
-            } catch (error) {
-
-                this.options
-                    .onError?.(
-                        error instanceof Error
-                            ? error
-                            : new Error(
-                                "Invalid Sarvam STT message"
-                            )
-                    );
-            }
             });
         });
     }

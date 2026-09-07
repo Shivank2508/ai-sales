@@ -8,6 +8,7 @@ import { documentRouter } from "./modules/documents/document.routes";
 import chatRoutes from "./modules/chat/chat.routes";
 import { agentRouter } from "./modules/agent/agent.routes";
 import voiceRoutes from "./modules/voice/voice.routes";
+import conversationIntelligenceRoutes from "./modules/conversation-intelligence/conversation-intelligence.routes";
 
 const app = express();
 app.use(express.json());
@@ -45,6 +46,10 @@ app.use(
 app.use(
     "/api/agent",
     agentRouter
+);
+app.use(
+    "/api/conversation-intelligence",
+    conversationIntelligenceRoutes
 );
 
 app.get("/health", (req, res) => {

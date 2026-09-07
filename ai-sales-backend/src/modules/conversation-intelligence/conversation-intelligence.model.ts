@@ -1,19 +1,12 @@
 import { Document, model, Schema, Types } from "mongoose";
-import { ConversationIntent, ConversationOutcome, ConversationSentiment, ObjectionType } from "./conversation-intelligence.types";
-
-
-interface ConversationObjectionDocument {
-    type: ObjectionType;
-    text: string;
-    confidence: number
-}
-
-interface ConversationActionItemDocument {
-    task: string;
-    owner?: string;
-    dueDate?: string;
-    completed: boolean
-}
+import {
+    ConversationActionItem,
+    ConversationIntent,
+    ConversationObjection,
+    ConversationOutcome,
+    ConversationSentiment,
+    ObjectionType
+} from "./conversation-intelligence.types";
 
 export interface ConversationIntelligenceDocument extends Document {
     conversationId: Types.ObjectId;
@@ -21,8 +14,8 @@ export interface ConversationIntelligenceDocument extends Document {
     summary: string;
     intent: ConversationIntent;
     sentiment: ConversationSentiment;
-    objections: ConversationObjectionDocument[];
-    actionItems: ConversationActionItemDocument[];
+    objections: ConversationObjection[];
+    actionItems: ConversationActionItem[];
     outcome: ConversationOutcome;
     buyingSignals: string[];
     competitorMentions: string[];
@@ -130,7 +123,7 @@ const conversationIntelligenceSchema = new Schema({
         type: String,
         required: true
     },
-    consfidance: {
+    confidence: {
         type: Number,
         required: true,
         min: 0,

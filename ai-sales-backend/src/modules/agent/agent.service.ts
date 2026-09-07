@@ -111,11 +111,11 @@ export class AgentService {
                     this.buildSystemPrompt(channel),
             },
 
-                    {
-                    role: "system",
-                    content: `Current product context (use this when the user says "this product"):
+            {
+                role: "system",
+                content: `Current product context (use this when the user says "this product"):
             ${JSON.stringify(product)}`,
-                    },
+            },
 
             ...this.buildHistoryMessages(history),
 

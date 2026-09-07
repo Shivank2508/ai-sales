@@ -5,11 +5,13 @@ import { ConversationAnalysis, ConversationTranscript } from "./conversation-int
 import { ConversationIntelligencePrompt } from "./conversation-intelligence.prompt";
 import { deepseek } from "../../services/ai.openai";
 import { validateConversationAnalysis } from "./conversation-intelligence.validator";
+import { ConversationIntelligenceRepository } from "./conversation-intelligence.repository";
 
 export class ConversationIntelligenceService {
     private readonly chatRepository = new ChatRepository()
     private readonly transcriptService = new TranscriptService()
     private readonly promptBuilder = new ConversationIntelligencePrompt()
+    private readonly intelligenceRepository = new ConversationIntelligenceRepository()
     private readonly model = "deepseek-v4-flash";
     async getTranscript(conversationId: string): Promise<ConversationTranscript> {
         if (!Types.ObjectId.isValid(conversationId)) {
@@ -37,25 +39,31 @@ export class ConversationIntelligenceService {
         const transcript = await this.getTranscript(conversationId)
 
         if (!transcript.text.trim()) {
-            "Conversation does not contain messages"
+            throw new Error("Conversation does not contain messages");
         }
 
-        const systemPrompt = this.promptBuilder.buildSystemPrompt()
+        const systemPrompt = this.promptBuilder.buildSystemPrompt();
 
-        const userPrompt = this.promptBuilder.buildUserPrompt(transcript.text)
+        const userPrompt = this.promptBuilder.buildUserPrompt(transcript.text);
 
         const response = await deepseek.chat.completions.create({
             model: this.model,
             messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
             temperature: 0,
-        })
+        });
 
-        const content = response.choices?.[0]?.message?.content
+        const content = response.choices?.[0]?.message?.content;
         if (!content) {
             throw new Error("DeepSeek returned an empty analysis");
         }
-        const analysis = this.parseAnalysis(content);
-        return validateConversationAnalysis(analysis);
+        const cleaned = this.cleanJsonResponse(content);
+        const analysis = this.parseAnalysis(cleaned);
+        validateConversationAnalysis(analysis);
+        const savedAnalysis = await this.intelligenceRepository.updateByConversationId(conversationId, {
+            productId: new Types.ObjectId(transcript.productId),
+            ...analysis,
+        });
+        return (savedAnalysis as unknown as ConversationAnalysis) || analysis;
     }
 
     private parseAnalysis(content: string): ConversationAnalysis {
