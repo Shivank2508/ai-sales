@@ -35,5 +35,140 @@ export class ConversationIntelligenceRepository {
             .lean()
     }
 
+    async getAnalyticsByProduct(productId: string) {
+        const objectId = new Types.ObjectId(productId);
+
+        const [total, intent, sentiment, outcomes, objections, buyingSignals, competitorMentions] = await Promise.all([
+            ConversationIntelligenceModel.countDocuments({ productId: objectId }),
+
+            ConversationIntelligenceModel.aggregate([
+                {
+                    $match: {
+                        productId: objectId,
+                    },
+                },
+                {
+                    $group: {
+                        _id: "$intent",
+                        count: {
+                            $sum: 1,
+                        },
+                    },
+                },
+            ]),
+
+            ConversationIntelligenceModel.aggregate([
+                {
+                    $match: {
+                        productId: objectId,
+                    },
+                },
+                {
+                    $group: {
+                        _id: "$sentiment",
+                        count: {
+                            $sum: 1,
+                        },
+                    },
+                },
+            ]),
+            ConversationIntelligenceModel.aggregate([
+                {
+                    $match: {
+                        productId: objectId,
+                    },
+                },
+                {
+                    $group: {
+                        _id: "$outcome",
+                        count: {
+                            $sum: 1,
+                        },
+                    },
+                },
+            ]),
+            ConversationIntelligenceModel.aggregate([
+                {
+                    $match: {
+                        productId: objectId,
+                    },
+                },
+                {
+                    $unwind: "$objections",
+                },
+                {
+                    $group: {
+                        _id: "$objections.type",
+                        count: {
+                            $sum: 1,
+                        },
+                    },
+                },
+            ]),
+            ConversationIntelligenceModel.aggregate([
+                {
+                    $match: {
+                        productId: objectId,
+                    },
+                },
+                {
+                    $unwind: "$buyingSignals",
+                },
+                {
+                    $group: {
+                        _id: "$buyingSignals",
+                        count: {
+                            $sum: 1,
+                        },
+                    },
+                },
+                {
+                    $sort: {
+                        count: -1,
+                    },
+                },
+                {
+                    $limit: 10,
+                },
+            ]),
+            ConversationIntelligenceModel.aggregate([
+                {
+                    $match: {
+                        productId: objectId,
+                    },
+                },
+                {
+                    $unwind: "$competitorMentions",
+                },
+                {
+                    $group: {
+                        _id: "$competitorMentions",
+                        count: {
+                            $sum: 1,
+                        },
+                    },
+                },
+                {
+                    $sort: {
+                        count: -1,
+                    },
+                },
+                {
+                    $limit: 10,
+                },
+            ]),
+
+        ])
+        return {
+            total,
+            intent,
+            sentiment,
+            outcomes,
+            objections,
+            buyingSignals,
+            competitorMentions,
+        };
+    }
+
 
 }
