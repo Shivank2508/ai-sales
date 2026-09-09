@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { ConversationAnalytics } from "./conversation-intelligence.analytics.types";
 import { ConversationIntelligenceRepository } from "./conversation-intelligence.repository";
 import { ConversationIntent, ConversationOutcome, ConversationSentiment, ObjectionType } from "./conversation-intelligence.types";
