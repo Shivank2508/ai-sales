@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 import { FollowUpModel } from "./follow-up.model";
-import { CreateFollowUpInput } from "./follow-up.types";
+import { CreateFollowUpInput, FollowUpStatus } from "./follow-up.types";
 
 export class FollowUpRepository {
     async create(data: CreateFollowUpInput) {
@@ -18,5 +18,52 @@ export class FollowUpRepository {
         return FollowUpModel.findById(id).lean();
     }
 
-    async findPendingByProduct(productId)
+    async findPendingByProduct(productId: string) {
+        return FollowUpModel
+            .find({
+                productId: new Types.ObjectId(productId),
+                status: FollowUpStatus.PENDING,
+            })
+            .sort({
+                dueDate: 1,
+                priority: -1,
+            })
+            .lean();
+    }
+    async complete(id: string) {
+        return FollowUpModel
+            .findByIdAndUpdate(
+                id,
+                {
+                    $set: {
+                        status:
+                            FollowUpStatus.COMPLETED,
+
+                        completedAt:
+                            new Date(),
+                    },
+                },
+                {
+                    new: true,
+                }
+            )
+            .lean();
+    }
+    async cancel(id: string) {
+        return FollowUpModel.findByIdAndUpdate(
+            id,
+            {
+                $set: {
+                    status:
+                        FollowUpStatus.CANCELLED,
+                },
+            },
+            {
+                new: true,
+            }
+        )
+            .lean();
+    }
+
+
 }
