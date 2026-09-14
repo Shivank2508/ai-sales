@@ -28,4 +28,10 @@ export interface CreateFollowUpInput {
     type: FollowUpType;
     priority: FollowUpPriority;
     dueDate?: Date;
+    scheduleSource?: FollowUpScheduleSource;
+}
+export enum FollowUpScheduleSource {
+    CUSTOMER_REQUEST = "CUSTOMER_REQUEST",
+    OUTCOME_RULE = "OUTCOME_RULE",
+    DEFAULT = "DEFAULT",
 }

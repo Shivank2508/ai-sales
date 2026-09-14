@@ -1,7 +1,8 @@
 import { Types } from "mongoose";
 import { ConversationIntelligenceRepository } from "../conversation-intelligence/conversation-intelligence.repository";
 import { FollowUpRepository } from "./follow-up.repository";
-import { CreateFollowUpInput, FollowUpPriority, FollowUpType } from "./follow-up.types";
+import { CreateFollowUpInput, FollowUpPriority, FollowUpScheduleSource, FollowUpType } from "./follow-up.types";
+import { da } from "zod/v4/locales";
 
 export class FollowUpService {
     private readonly repository = new FollowUpRepository()
@@ -22,12 +23,16 @@ export class FollowUpService {
         if (intelligence.outcome === "NOT_INTERESTED" || intelligence.outcome === "LOST") {
             return null;
         }
+        const dueDate = this.determineDueDate(intelligence);
+        const schedule = this.determineSchedule(intelligence);
         const input: CreateFollowUpInput = {
             conversationId,
             productId: intelligence.productId.toString(),
             task: intelligence.nextBestAction,
             type: this.determineType(intelligence.nextBestAction),
-            priority: this.determinePriority(intelligence)
+            priority: this.determinePriority(intelligence),
+            dueDate: schedule.dueDate,
+            scheduleSource: schedule.source,
         }
         return this.repository.create(input);
     }
@@ -105,5 +110,196 @@ export class FollowUpService {
             return FollowUpPriority.MEDIUM;
         }
         return FollowUpPriority.LOW;
+    }
+
+
+    async determineDueDate(intelligence: any): Date | undefined {
+        const actionItems = intelligence.actionItems ?? []
+        const actionWithDueDate = actionItems.find((item: any) => item.dueDate)
+
+        if (actionWithDueDate?.dueDate) {
+            const date = new Date(actionWithDueDate?.dueDate)
+            if (!Number.isNaN(date.getTime())) {
+                return date;
+            }
+        }
+
+        /*
+     * No explicit date.
+     *
+     * Use outcome-based scheduling.
+     */
+
+        const now = new Date()
+
+        switch (intelligence.outcome) {
+            case "PURCHASE":
+                return now;
+
+            case "DEMO_REQUESTED":
+                return this.addDays(now, 1)
+
+            case "FOLLOW_UP_REQUIRED":
+                return this.addDays(now, 2)
+
+            case "INTERESTED":
+                return this.addDays(now, 3)
+
+            case "PRICING":
+                return this.addDays(now, 2)
+
+            default:
+
+                return this.addDays(now, 7);
+
+        }
+    }
+
+    private determineSchedule(
+        intelligence: any
+    ): {
+        dueDate: Date;
+        source: FollowUpScheduleSource;
+    } {
+
+        const actionItems =
+            intelligence.actionItems ?? [];
+
+
+        const actionWithDueDate =
+            actionItems.find(
+                (
+                    item: any
+                ) => item.dueDate
+            );
+
+
+        if (
+            actionWithDueDate?.dueDate
+        ) {
+
+            const date =
+                new Date(
+                    actionWithDueDate.dueDate
+                );
+
+
+            if (
+                !Number.isNaN(
+                    date.getTime()
+                )
+            ) {
+
+                return {
+                    dueDate: date,
+
+                    source:
+                        FollowUpScheduleSource
+                            .CUSTOMER_REQUEST,
+                };
+            }
+        }
+
+
+        const now =
+            new Date();
+
+
+        switch (
+        intelligence.outcome
+        ) {
+
+            case "PURCHASE":
+
+                return {
+                    dueDate: now,
+
+                    source:
+                        FollowUpScheduleSource
+                            .OUTCOME_RULE,
+                };
+
+
+            case "DEMO_REQUESTED":
+
+                return {
+                    dueDate:
+                        this.addDays(
+                            now,
+                            1
+                        ),
+
+                    source:
+                        FollowUpScheduleSource
+                            .OUTCOME_RULE,
+                };
+
+
+            case "FOLLOW_UP_REQUIRED":
+
+                return {
+                    dueDate:
+                        this.addDays(
+                            now,
+                            2
+                        ),
+
+                    source:
+                        FollowUpScheduleSource
+                            .OUTCOME_RULE,
+                };
+
+
+            case "INTERESTED":
+
+                return {
+                    dueDate:
+                        this.addDays(
+                            now,
+                            3
+                        ),
+
+                    source:
+                        FollowUpScheduleSource
+                            .OUTCOME_RULE,
+                };
+
+
+            case "PRICING":
+
+                return {
+                    dueDate:
+                        this.addDays(
+                            now,
+                            2
+                        ),
+
+                    source:
+                        FollowUpScheduleSource
+                            .OUTCOME_RULE,
+                };
+
+
+            default:
+
+                return {
+                    dueDate:
+                        this.addDays(
+                            now,
+                            7
+                        ),
+
+                    source:
+                        FollowUpScheduleSource
+                            .DEFAULT,
+                };
+        }
+    }
+    private addDays(date: Date, days: number): Date {
+        const result = new Date(date)
+
+        result.setDate(result.getDate() + days)
+
+        return result;
     }
 }

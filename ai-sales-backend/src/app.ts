@@ -9,49 +9,28 @@ import chatRoutes from "./modules/chat/chat.routes";
 import { agentRouter } from "./modules/agent/agent.routes";
 import voiceRoutes from "./modules/voice/voice.routes";
 import conversationIntelligenceRoutes from "./modules/conversation-intelligence/conversation-intelligence.routes";
+import followUpRoutes from "./modules/follow-up/follow-up.routes";
 
 const app = express();
 app.use(express.json());
 
 app.use(cors())
 
-app.use(
-    `/leads`,
-    leadRouter
+app.use(`/leads`, leadRouter);
+
+app.use(`/products`, productRouter
+);
+app.use(`/knowledge`, knowledgeRouter
+);
+app.use(`/documents`, documentRouter
 );
 
-app.use(
-    `/products`,
-    productRouter
-);
-app.use(
-    `/knowledge`,
-    knowledgeRouter
-);
-app.use(
-    `/documents`,
-    documentRouter
-);
+app.use("/voice", voiceRoutes);
 
-app.use(
-    "/voice",
-    voiceRoutes
-);
-
-app.use(
-    "/chat",
-    chatRoutes
-);
-
-app.use(
-    "/api/agent",
-    agentRouter
-);
-app.use(
-    "/api/conversation-intelligence",
-    conversationIntelligenceRoutes
-);
-
+app.use("/chat", chatRoutes);
+app.use("/api/agent", agentRouter);
+app.use("/api/conversation-intelligence", conversationIntelligenceRoutes);
+app.use("/api/follow-ups", followUpRoutes);
 app.get("/health", (req, res) => {
     try {
         res.json({

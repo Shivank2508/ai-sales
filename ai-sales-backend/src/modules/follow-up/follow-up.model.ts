@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { FollowUpPriority, FollowUpStatus, FollowUpType } from "./follow-up.types";
+import { FollowUpPriority, FollowUpScheduleSource, FollowUpStatus, FollowUpType } from "./follow-up.types";
 
 const followUpSchema = new Schema({
     conversationId: {
@@ -50,6 +50,12 @@ const followUpSchema = new Schema({
 
     completedAt: {
         type: Date,
+    },
+    scheduleSource: {
+        type: String,
+        enum: Object.values(
+            FollowUpScheduleSource
+        ),
     },
 }, {
     timestamps: true,
