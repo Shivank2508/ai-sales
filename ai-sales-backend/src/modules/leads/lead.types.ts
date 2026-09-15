@@ -12,7 +12,7 @@ export type LeadStatus = (typeof LEAD_STATUSES)[number]
 
 export interface CreateLeadInput {
     firstName: string;
-    lastName: string;
+    lastName?: string;
     email?: string;
     phone?: string;
     jobTitle?: string;
@@ -24,5 +24,9 @@ export interface CreateLeadInput {
 
     source?: string;
     notes?: string;
+}
 
+export interface UpdateLeadInput extends Partial<CreateLeadInput> {
+    status?: LeadStatus;
+    score?: number;
 }

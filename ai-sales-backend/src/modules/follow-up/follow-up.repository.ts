@@ -65,5 +65,12 @@ export class FollowUpRepository {
             .lean();
     }
 
+    async findActiveByConversation(conversationId: string) {
+        return FollowUpModel.findOne({
+            conversationId: new Types.ObjectId(conversationId),
+            status: FollowUpStatus.PENDING
+        }).lean()
+    }
+
 
 }

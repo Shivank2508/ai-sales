@@ -15,18 +15,11 @@ const app = express();
 app.use(express.json());
 
 app.use(cors())
-
 app.use(`/leads`, leadRouter);
-
-app.use(`/products`, productRouter
-);
-app.use(`/knowledge`, knowledgeRouter
-);
-app.use(`/documents`, documentRouter
-);
-
+app.use(`/products`, productRouter);
+app.use(`/knowledge`, knowledgeRouter);
+app.use(`/documents`, documentRouter);
 app.use("/voice", voiceRoutes);
-
 app.use("/chat", chatRoutes);
 app.use("/api/agent", agentRouter);
 app.use("/api/conversation-intelligence", conversationIntelligenceRoutes);

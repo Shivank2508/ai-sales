@@ -1,5 +1,5 @@
 import { LeadModel, type Lead } from "./lead.model";
-import { CreateLeadInput } from "./lead.types";
+import { CreateLeadInput, UpdateLeadInput } from "./lead.types";
 
 export class LeadRepositry {
     async create(
@@ -31,7 +31,7 @@ export class LeadRepositry {
 
     async updateById(
         id: string,
-        input: Partial<CreateLeadInput>
+        input: UpdateLeadInput
     ): Promise<Lead | null> {
         return LeadModel
             .findByIdAndUpdate(

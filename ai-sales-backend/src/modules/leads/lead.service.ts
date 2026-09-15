@@ -6,6 +6,7 @@ import { Types } from "mongoose";
 
 import type {
     CreateLeadInput,
+    LeadStatus,
 } from "./lead.types.js";
 import { LeadRepositry } from "./lead.repository.js";
 
@@ -101,5 +102,15 @@ export class LeadService {
                 // ErrorCode.VALIDATION_ERROR
             );
         }
+    }
+
+    async updateStatusFromConversation(leadId: string, status: LeadStatus) {
+        const lead = await this.leadRepository.findById(leadId);
+        if (!lead) {
+            throw new Error("Lead not found");
+        }
+        return this.leadRepository.updateById(leadId, {
+            status,
+        });
     }
 }

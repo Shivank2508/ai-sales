@@ -61,5 +61,15 @@ const followUpSchema = new Schema({
     timestamps: true,
 }
 )
-
+followUpSchema.index(
+    {
+        conversationId: 1,
+    },
+    {
+        unique: true,
+        partialFilterExpression: {
+            status: "PENDING",
+        },
+    }
+);
 export const FollowUpModel = model("FollowUp", followUpSchema)

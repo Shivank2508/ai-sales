@@ -1,40 +1,65 @@
 import { Types } from "mongoose";
 import { ConversationIntelligenceRepository } from "../conversation-intelligence/conversation-intelligence.repository";
 import { FollowUpRepository } from "./follow-up.repository";
-import { CreateFollowUpInput, FollowUpPriority, FollowUpScheduleSource, FollowUpType } from "./follow-up.types";
-import { da } from "zod/v4/locales";
+import { CreateFollowUpInput, FollowUpPriority, FollowUpScheduleSource, FollowUpStatus, FollowUpType } from "./follow-up.types";
 
 export class FollowUpService {
     private readonly repository = new FollowUpRepository()
     private readonly intelligenceRepository = new ConversationIntelligenceRepository()
 
     async createFromConversation(conversationId: string) {
-        if (!Types.ObjectId.isValid(conversationId)) {
-            throw new Error(
-                "Invalid conversationId"
-            );
-        }
+        try {
+            if (!Types.ObjectId.isValid(conversationId)) {
+                throw new Error(
+                    "Invalid conversationId"
+                );
+            }
+            const existingFollowUp = await this.repository.findActiveByConversation(conversationId);
 
-        const intelligence = await this.intelligenceRepository.findByConversationId(conversationId)
-        if (!intelligence) {
-            throw new Error("Conversation intelligence not found. Analyze the conversation first.");
-        }
+            if (existingFollowUp) {
+                return existingFollowUp;
+            }
+            const intelligence = await this.intelligenceRepository.findByConversationId(conversationId)
+            if (!intelligence) {
+                throw new Error("Conversation intelligence not found. Analyze the conversation first.");
+            }
 
-        if (intelligence.outcome === "NOT_INTERESTED" || intelligence.outcome === "LOST") {
-            return null;
+            if (intelligence.outcome === "NOT_INTERESTED" || intelligence.outcome === "LOST") {
+                return null;
+            }
+            const dueDate = this.determineDueDate(intelligence);
+            const schedule = this.determineSchedule(intelligence);
+            const input: CreateFollowUpInput = {
+                conversationId,
+                productId: intelligence.productId.toString(),
+                task: intelligence.nextBestAction,
+                type: this.determineType(intelligence.nextBestAction),
+                priority: this.determinePriority(intelligence),
+                dueDate: schedule.dueDate,
+                scheduleSource: schedule.source,
+            }
+            return this.repository.create(input);
+        } catch (error: any) {
+
+            /*
+             * MongoDB duplicate key.
+             */
+
+            if (error?.code === 11000) {
+
+                const existing =
+                    await this.repository
+                        .findActiveByConversation(
+                            conversationId
+                        );
+
+                if (existing) {
+                    return existing;
+                }
+            }
+
+            throw error;
         }
-        const dueDate = this.determineDueDate(intelligence);
-        const schedule = this.determineSchedule(intelligence);
-        const input: CreateFollowUpInput = {
-            conversationId,
-            productId: intelligence.productId.toString(),
-            task: intelligence.nextBestAction,
-            type: this.determineType(intelligence.nextBestAction),
-            priority: this.determinePriority(intelligence),
-            dueDate: schedule.dueDate,
-            scheduleSource: schedule.source,
-        }
-        return this.repository.create(input);
     }
 
     async complete(followUpId: string) {
@@ -46,9 +71,13 @@ export class FollowUpService {
         if (!followUp) {
             throw new Error("Follow-up not found");
         }
-
+        if (followUp.status !== FollowUpStatus.PENDING
+        ) {
+            throw new Error(
+                `Follow-up cannot be completed because it is already ${followUp.status}`
+            );
+        }
         return this.repository.complete(followUpId)
-
     }
     async cancel(followUpId: string) {
         if (!Types.ObjectId.isValid(followUpId)) {
@@ -62,7 +91,9 @@ export class FollowUpService {
         if (!followUp) {
             throw new Error("Follow-up not found")
         }
-
+        if (followUp.status !== FollowUpStatus.PENDING) {
+            throw new Error(`Follow-up cannot be cancelled because it is already ${followUp.status}`);
+        }
         return this.repository.cancel(followUpId)
     }
     async getPendingByProduct(productId: string) {
