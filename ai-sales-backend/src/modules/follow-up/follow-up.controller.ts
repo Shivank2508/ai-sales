@@ -39,7 +39,7 @@ export class FollowUpController {
         });
     }
 
-    getPendingByProduct = async (res: Response, req: Request) => {
+    getPendingByProduct = async (req: Request, res: Response) => {
         const { productId, } = req.params;
 
         const followUps = await this.service.getPendingByProduct(productId)

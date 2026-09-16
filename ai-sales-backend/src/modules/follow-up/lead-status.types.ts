@@ -1,7 +1,8 @@
 import { ConversationIntent, ConversationOutcome, ConversationSentiment } from "../conversation-intelligence/conversation-intelligence.types";
+import { LeadStatus } from "../leads/lead.types";
 
 export interface LeadStatusDecision {
-    status: string;
+    status: LeadStatus;
     reason: string;
     confidence: number;
     source: "CONVERSATION_INTELLIGENCE";
