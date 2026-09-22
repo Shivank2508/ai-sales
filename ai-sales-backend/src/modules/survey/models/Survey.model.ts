@@ -1,14 +1,15 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 
 export enum SurveyStatus {
     DRAFT = "draft",
     ACTIVE = "active",
     ARCHIVED = "archived",
 }
-export interface ISurvey extends Document {
+
+export interface ISurvey {
     campaignId: mongoose.Types.ObjectId;
     name: string;
-    description: string;
+    description?: string;
     version: number;
     status: SurveyStatus;
     language: string;
@@ -16,11 +17,13 @@ export interface ISurvey extends Document {
     endMessage?: string;
     maxQuestions?: number;
     createdBy: mongoose.Types.ObjectId;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
-const SurveySchema = new Schema<ISurvey>(
+export type ISurveyDocument = ISurvey & Document;
+
+const SurveySchema = new Schema<ISurveyDocument>(
     {
         campaignId: {
             type: Schema.Types.ObjectId,
@@ -71,8 +74,8 @@ const SurveySchema = new Schema<ISurvey>(
     {
         timestamps: true,
     }
-)
+);
 
-export const SurveyModel =
-    mongoose.models.Survey ||
-    mongoose.model<ISurvey>("Survey", SurveySchema);
+export const SurveyModel: Model<ISurveyDocument> =
+    (mongoose.models.Survey as Model<ISurveyDocument>) ||
+    mongoose.model<ISurveyDocument>("Survey", SurveySchema);

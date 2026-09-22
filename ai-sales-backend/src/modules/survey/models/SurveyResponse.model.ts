@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 
 export enum SurveyResponseStatus {
     STARTED = "started",
@@ -21,7 +21,7 @@ export interface ISurveyAnswer {
     answeredAt: Date;
 }
 
-export interface ISurveyResponse extends Document {
+export interface ISurveyResponse {
     surveyId: mongoose.Types.ObjectId;
 
     campaignId: mongoose.Types.ObjectId;
@@ -44,9 +44,11 @@ export interface ISurveyResponse extends Document {
 
     metadata?: Record<string, unknown>;
 
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
+
+export type ISurveyResponseDocument = ISurveyResponse & Document;
 
 const SurveyAnswerSchema = new Schema<ISurveyAnswer>(
     {
@@ -81,7 +83,7 @@ const SurveyAnswerSchema = new Schema<ISurveyAnswer>(
     }
 );
 
-const SurveyResponseSchema = new Schema<ISurveyResponse>(
+const SurveyResponseSchema = new Schema<ISurveyResponseDocument>(
     {
         surveyId: {
             type: Schema.Types.ObjectId,
@@ -144,9 +146,9 @@ const SurveyResponseSchema = new Schema<ISurveyResponse>(
     }
 );
 
-export const SurveyResponseModel =
-    mongoose.models.SurveyResponse ||
-    mongoose.model<ISurveyResponse>(
+export const SurveyResponseModel: Model<ISurveyResponseDocument> =
+    (mongoose.models.SurveyResponse as Model<ISurveyResponseDocument>) ||
+    mongoose.model<ISurveyResponseDocument>(
         "SurveyResponse",
         SurveyResponseSchema
     );

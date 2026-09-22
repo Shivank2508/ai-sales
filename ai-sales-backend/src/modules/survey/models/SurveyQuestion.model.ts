@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 
 export enum QuestionType {
     SINGLE_CHOICE = "single_choice",
@@ -34,7 +34,7 @@ export interface IQuestionCondition {
     nextQuestionId?: string;
 }
 
-export interface ISurveyQuestion extends Document {
+export interface ISurveyQuestion {
     surveyId: mongoose.Types.ObjectId;
     questionId: string;
     order: number;
@@ -46,9 +46,11 @@ export interface ISurveyQuestion extends Document {
     options?: IQuestionOption[];
     conditions?: IQuestionCondition[];
     metadata?: Record<string, unknown>;
-    createdAt: Date;
-    updatedAt: Date
+    createdAt?: Date;
+    updatedAt?: Date;
 }
+
+export type ISurveyQuestionDocument = ISurveyQuestion & Document;
 
 const QuestionOptionSchema = new Schema<IQuestionOption>(
     {
@@ -106,7 +108,7 @@ const QuestionConditionSchema = new Schema<IQuestionCondition>(
     }
 );
 
-const SurveyQuestionSchema = new Schema<ISurveyQuestion>(
+const SurveyQuestionSchema = new Schema<ISurveyQuestionDocument>(
     {
         surveyId: {
             type: Schema.Types.ObjectId,
@@ -173,9 +175,9 @@ SurveyQuestionSchema.index({
     questionId: 1,
 });
 
-export const SurveyQuestionModel =
-    mongoose.models.SurveyQuestion ||
-    mongoose.model<ISurveyQuestion>(
+export const SurveyQuestionModel: Model<ISurveyQuestionDocument> =
+    (mongoose.models.SurveyQuestion as Model<ISurveyQuestionDocument>) ||
+    mongoose.model<ISurveyQuestionDocument>(
         "SurveyQuestion",
         SurveyQuestionSchema
     );

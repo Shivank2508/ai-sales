@@ -1,9 +1,8 @@
-import { IQuestionCondition, ISurveyQuestion, QuestionAction } from "../models/SurveyQuestion.model";
-
-export interface QuestionAnswer {
-    questionId: string;
-    value: unknown
-}
+import {
+    ISurveyQuestion,
+    IQuestionCondition,
+    QuestionAction,
+} from "../models/SurveyQuestion.model";
 
 export interface FlowResult {
     action: QuestionAction;
@@ -11,7 +10,12 @@ export interface FlowResult {
 }
 
 export class SurveyFlowService {
-    evaluateNextQuestion(question: ISurveyQuestion, answer: unknown): FlowResult {
+
+    evaluateNextQuestion(
+        question: ISurveyQuestion,
+        answers: Record<string, unknown>
+    ): FlowResult {
+
         if (!question.conditions?.length) {
             return {
                 action: QuestionAction.NEXT,
@@ -19,50 +23,82 @@ export class SurveyFlowService {
         }
 
         for (const condition of question.conditions) {
-            if (this.matches(condition, answer)) {
+
+            const answer =
+                answers[condition.field];
+
+            if (
+                this.matches(
+                    condition,
+                    answer
+                )
+            ) {
                 return {
                     action: condition.action,
-                    nextQuestionId: condition.nextQuestionId,
+                    nextQuestionId:
+                        condition.nextQuestionId,
                 };
             }
         }
 
         return {
-            action: QuestionAction.NEXT
-        }
+            action: QuestionAction.NEXT,
+        };
     }
 
-    private matches(condition: IQuestionCondition, answer: unknown): boolean {
+    private matches(
+        condition: IQuestionCondition,
+        answer: unknown
+    ): boolean {
+
         switch (condition.operator) {
+
             case "equals":
-                return String(answer) === String(condition.value);
+                return (
+                    String(answer) ===
+                    String(condition.value)
+                );
 
             case "not_equals":
-                return String(answer) !== String(condition.value);
+                return (
+                    String(answer) !==
+                    String(condition.value)
+                );
 
             case "contains":
                 return String(answer)
                     .toLowerCase()
-                    .includes(String(condition.value).toLowerCase());
+                    .includes(
+                        String(condition.value)
+                            .toLowerCase()
+                    );
 
             case "not_contains":
                 return !String(answer)
                     .toLowerCase()
-                    .includes(String(condition.value).toLowerCase());
+                    .includes(
+                        String(condition.value)
+                            .toLowerCase()
+                    );
 
             case "in":
-                return Array.isArray(condition.value)
-                    ? condition.value.includes(String(answer))
-                    : false;
+                return (
+                    Array.isArray(condition.value) &&
+                    condition.value.includes(
+                        String(answer)
+                    )
+                );
 
             case "not_in":
-                return Array.isArray(condition.value)
-                    ? !condition.value.includes(String(answer))
-                    : true;
+                return (
+                    Array.isArray(condition.value) &&
+                    !condition.value.includes(
+                        String(answer)
+                    )
+                );
 
             default:
                 return false;
         }
     }
-
 }
