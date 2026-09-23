@@ -3,6 +3,7 @@ import { SurveyQuestionRepository } from "../repositories/SurveyQuestionReposito
 import { SurveyRepository } from "../repositories/SurveyRepository";
 import { SurveyResponseRepository } from "../repositories/SurveyResponseRepository";
 import { SurveyResponseStatus } from "../models/SurveyResponse.model";
+import { ISurveyQuestion } from "../models/SurveyQuestion.model";
 
 export class SurveyService {
     private readonly surveyRepository = new SurveyRepository()
@@ -98,5 +99,93 @@ export class SurveyService {
                 response.surveyId.toString(),
                 response.currentQuestionId
             );
+    }
+    async createSurvey(data: {
+        campaignId: string;
+        name: string;
+        description?: string;
+        language?: string;
+        welcomeMessage?: string;
+        endMessage?: string;
+        createdBy: string;
+    }) {
+        const existing = await this.surveyRepository.findByCampaignId(data.campaignId)
+        if (existing) {
+            throw new Error("Survey already exists for this campaign");
+        }
+
+        return this.surveyRepository.create({
+            campaignId: new mongoose.Types.ObjectId(data.campaignId),
+            name: data.name,
+            description: data.description,
+            language: data.language || "en-IN",
+            welcomeMessage: data.welcomeMessage,
+            endMessage: data.endMessage,
+            createdBy: new mongoose.Types.ObjectId(data.createdBy),
+        });
+    }
+
+    async updateSurvey(surveyId: string, data: Partial<{
+        name: string;
+        description: string;
+        language: string;
+        welcomeMessage: string;
+        endMessage: string;
+    }>) {
+        const survey = await this.surveyRepository.update(surveyId, data)
+        if (!survey) {
+            throw new Error("Survey not found");
+        }
+
+        return survey
+    }
+
+    async addQuestion(surveyId: string, data: Partial<ISurveyQuestion>) {
+        const survey = await this.surveyRepository.findById(surveyId)
+
+        if (!survey) {
+            throw new Error("Survey not found");
+        }
+
+        const questions = await this.questionRepository.findBySurveyId(surveyId);
+
+        const order = questions.length + 1;
+
+        return this.questionRepository.create({
+            ...data,
+            surveyId: new mongoose.Types.ObjectId(surveyId),
+            order,
+        });
+    }
+    async updateQuestion(
+        questionId: string,
+        data: Partial<ISurveyQuestion>
+    ) {
+        const question =
+            await this.questionRepository.update(
+                questionId,
+                data
+            );
+
+        if (!question) {
+            throw new Error("Question not found");
+        }
+
+        return question;
+    }
+
+    async deleteQuestion(
+        questionId: string
+    ) {
+        const deleted =
+            await this.questionRepository.delete(questionId);
+
+        if (!deleted) {
+            throw new Error("Question not found");
+        }
+
+        return {
+            success: true,
+        };
     }
 }
