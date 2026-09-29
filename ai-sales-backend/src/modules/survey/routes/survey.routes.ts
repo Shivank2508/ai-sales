@@ -25,9 +25,6 @@ router.put(
     controller.updateSurvey
 );
 
-/*
- * Questions
- */
 
 router.get(
     "/:id/questions",
@@ -48,5 +45,13 @@ router.delete(
     "/:id/questions/:questionId",
     controller.deleteQuestion
 );
+router.post(
+    "/:id/start",
+    controller.startSurvey
+);
 
+router.post(
+    "/responses/:responseId/answer",
+    controller.answerQuestion
+);
 export default router;

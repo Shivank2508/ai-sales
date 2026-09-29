@@ -3,7 +3,8 @@ import { SurveyQuestionRepository } from "../repositories/SurveyQuestionReposito
 import { SurveyRepository } from "../repositories/SurveyRepository";
 import { SurveyResponseRepository } from "../repositories/SurveyResponseRepository";
 import { SurveyResponseStatus } from "../models/SurveyResponse.model";
-import { ISurveyQuestion } from "../models/SurveyQuestion.model";
+import { ISurveyQuestion, QuestionAction } from "../models/SurveyQuestion.model";
+import { SurveyFlowService } from "./SurveyFlowService";
 
 export class SurveyService {
     private readonly surveyRepository = new SurveyRepository()
@@ -186,6 +187,79 @@ export class SurveyService {
 
         return {
             success: true,
+        };
+    }
+
+    async answerQuestion(responseId: string, answer: {
+        questionId: string;
+        rawAnswer: string;
+        normalizedAnswer: unknown;
+        confidence?: number;
+    }) {
+        const response = await this.responseRepository.findById(responseId)
+
+        if (!response) {
+            throw new Error(
+                "Survey response not found"
+            );
+        }
+
+        const question = await this.questionRepository.findByQuestionId(response.surveyId.toString(), answer.questionId);
+        if (!question) { throw new Error("Question not found"); }
+
+        await this.responseRepository.addAnswer(
+            responseId,
+            {
+                questionId: answer.questionId,
+                rawAnswer: answer.rawAnswer,
+                normalizedAnswer: answer.normalizedAnswer as any,
+                confidence: answer.confidence,
+                extractedBy: "ai",
+                answeredAt: new Date(),
+            }
+        );
+
+        const answers: Record<string, unknown> = {};
+
+        for (const item of response.answers) {
+            answers[item.questionId] =
+                item.normalizedAnswer;
+        }
+        answers[answer.questionId] = answer.normalizedAnswer;
+        const flowService = new SurveyFlowService();
+        const flow = flowService.evaluateNextQuestion(question, answers);
+
+        if (flow.action === QuestionAction.END_SURVEY) {
+            return this.responseRepository.complete(
+                responseId
+            );
+        }
+
+        let nextQuestion: ISurveyQuestion | null = null;
+
+        if (flow.nextQuestionId) {
+            nextQuestion = await this.questionRepository.findByQuestionId(response.surveyId.toString(), flow.nextQuestionId);
+        }
+
+        if (!nextQuestion) {
+            nextQuestion = await this.questionRepository.findNextByOrder(response.surveyId.toString(), question.order);
+        }
+
+        if (!nextQuestion) {
+            return this.responseRepository.complete(
+                responseId
+            );
+        }
+
+        await this.responseRepository
+            .updateCurrentQuestion(
+                responseId,
+                nextQuestion.questionId
+            );
+
+        return {
+            completed: false,
+            nextQuestion,
         };
     }
 }

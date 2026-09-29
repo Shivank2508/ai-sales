@@ -135,4 +135,48 @@ export class SurveyController {
             next(error);
         }
     };
+
+    startSurvey = async (
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const result =
+                await this.surveyService.startSurvey({
+                    surveyId: req.params.id,
+                    campaignId: req.body.campaignId,
+                    leadId: req.body.leadId,
+                    conversationId: req.body.conversationId,
+                });
+
+            return res.status(201).json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    answerQuestion = async (
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const result =
+                await this.surveyService.answerQuestion(
+                    req.params.responseId,
+                    req.body
+                );
+
+            return res.json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
 }
