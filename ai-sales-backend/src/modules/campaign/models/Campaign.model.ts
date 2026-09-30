@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 export enum CampaignType {
     SURVEY = "survey",
     SALES = "sales",
@@ -14,7 +14,7 @@ export enum CampaignStatus {
     COMPLETED = "completed",
     ARCHIVED = "archived"
 }
-export interface ICampaign extends Document {
+export interface ICampaign {
     name: string;
     description?: string;
     businessId: mongoose.Types.ObjectId;
@@ -25,11 +25,13 @@ export interface ICampaign extends Document {
     endDate?: Date;
     surveyId?: mongoose.Types.ObjectId;
     createdBy: mongoose.Types.ObjectId;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
-const CampaignSchema = new Schema<ICampaign>(
+export type ICampaignDocument = ICampaign & Document;
+
+const CampaignSchema = new Schema<ICampaignDocument>(
     {
         name: {
             type: String,
@@ -86,6 +88,6 @@ CampaignSchema.index({
     status: 1,
 });
 
-export const CampaignModel =
-    mongoose.models.Campaign ||
-    mongoose.model<ICampaign>("Campaign", CampaignSchema);
+export const CampaignModel: Model<ICampaignDocument> =
+    (mongoose.models.Campaign as Model<ICampaignDocument>) ||
+    mongoose.model<ICampaignDocument>("Campaign", CampaignSchema);
