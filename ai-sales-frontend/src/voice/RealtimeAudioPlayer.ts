@@ -55,7 +55,6 @@ export class RealtimeAudioPlayer {
 
 
     stop(): void {
-<<<<<<< HEAD
         this.stopped = true;
 
         for (const source of this.activeSources) {
@@ -70,21 +69,6 @@ export class RealtimeAudioPlayer {
 
         if (this.audioContext) {
             this.nextStartTime = this.audioContext.currentTime;
-=======
-        this.stopped = true
-        for (const source of this.activeSources) {
-            try {
-                source.stop()
-            } catch {
-                // Already stopped
-            }
-        }
-
-        this.activeSources.clear()
-
-        if (this.audioContext) {
-            this.nextStartTime = this.audioContext.currentTime
->>>>>>> 536550350b4b35da11339aaac92e7790d49ece96
         }
     }
 
