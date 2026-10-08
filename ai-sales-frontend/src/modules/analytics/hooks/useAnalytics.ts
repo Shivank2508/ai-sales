@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { analyticsApi } from "../api/analyticsApi";
 
@@ -13,19 +12,10 @@ export const useDashboardMetrics = () => {
 export const useCampaignAnalytics = (campaignId: string) => {
   return useQuery({
     queryKey: ["analytics", "campaign", campaignId],
-=======
-import { useQuery } from "@tanstack/react-query";
-import { analyticsApi } from "../api/analyticsApi";
-
-export const useCampaignAnalytics = (campaignId: string) => {
-  return useQuery({
-    queryKey: ["analytics", campaignId],
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     queryFn: () => analyticsApi.getCampaignAnalytics(campaignId),
     enabled: Boolean(campaignId),
   });
 };
-<<<<<<< HEAD
 
 export const useSurveyAnalytics = (surveyId: string) => {
   return useQuery({
@@ -75,5 +65,3 @@ export const useProductAnalytics = (productId: string) => {
     enabled: Boolean(productId),
   });
 };
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a

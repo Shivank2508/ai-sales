@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-<<<<<<< HEAD
 import {
     ISurveyAnswer,
     ISurveyResponse,
@@ -7,61 +6,36 @@ import {
     SurveyResponseModel,
     SurveyResponseStatus,
 } from "../models/SurveyResponse.model";
-=======
-import { ISurveyAnswer, ISurveyResponse, ISurveyResponseDocument, SurveyResponseModel, SurveyResponseStatus } from "../models/SurveyResponse.model";
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
 export class SurveyResponseRepository {
     async create(data: Partial<ISurveyResponse>): Promise<ISurveyResponseDocument> {
         return SurveyResponseModel.create(data);
     }
 
-<<<<<<< HEAD
     async findById(responseId: string): Promise<ISurveyResponseDocument | null> {
-=======
-    async findById(responseId: string): Promise<ISurveyResponse | null> {
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         if (!mongoose.Types.ObjectId.isValid(responseId)) {
             return null;
         }
 
-<<<<<<< HEAD
         return SurveyResponseModel.findById(responseId).exec();
     }
 
     async findByConversationId(conversationId: string): Promise<ISurveyResponseDocument | null> {
-=======
-        return SurveyResponseModel
-            .findById(responseId)
-            .exec();
-    }
-
-    async findByConversationId(conversationId: string): Promise<ISurveyResponse | null> {
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         return SurveyResponseModel.findOne({
             conversationId,
         }).exec();
     }
 
-<<<<<<< HEAD
     async findByLeadId(leadId: string): Promise<ISurveyResponseDocument[]> {
         return SurveyResponseModel.find({
             leadId,
         })
-=======
-    async findByLeadId(leadId: string): Promise<ISurveyResponse[]> {
-        return SurveyResponseModel
-            .find({
-                leadId,
-            })
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
             .sort({
                 createdAt: -1,
             })
             .exec();
     }
 
-<<<<<<< HEAD
     async findByLeadAndSurvey(surveyId: string, leadId: string): Promise<ISurveyResponseDocument | null> {
         return SurveyResponseModel.findOne({
             surveyId,
@@ -118,14 +92,6 @@ export class SurveyResponseRepository {
                 $set: {
                     answers: updatedAnswers,
                     updatedAt: new Date(),
-=======
-    async addAnswer(responseId: string, answer: ISurveyAnswer): Promise<ISurveyResponse | null> {
-        return SurveyResponseModel.findByIdAndUpdate(
-            responseId,
-            {
-                $push: {
-                    answers: answer,
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                 },
             },
             {
@@ -134,20 +100,13 @@ export class SurveyResponseRepository {
         ).exec();
     }
 
-<<<<<<< HEAD
     async updateCurrentQuestion(responseId: string, questionId: string): Promise<ISurveyResponseDocument | null> {
-=======
-    async updateCurrentQuestion(responseId: string, questionId: string): Promise<ISurveyResponse | null> {
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         return SurveyResponseModel.findByIdAndUpdate(
             responseId,
             {
                 $set: {
                     currentQuestionId: questionId,
-<<<<<<< HEAD
                     status: SurveyResponseStatus.IN_PROGRESS,
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                 },
             },
             {
@@ -159,16 +118,11 @@ export class SurveyResponseRepository {
     async updateProgress(
         responseId: string,
         completionPercentage: number
-<<<<<<< HEAD
     ): Promise<ISurveyResponseDocument | null> {
-=======
-    ): Promise<ISurveyResponse | null> {
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         return SurveyResponseModel.findByIdAndUpdate(
             responseId,
             {
                 $set: {
-<<<<<<< HEAD
                     completionPercentage: Math.min(100, Math.max(0, Math.round(completionPercentage))),
                 },
             },
@@ -187,9 +141,6 @@ export class SurveyResponseRepository {
             {
                 $set: {
                     status,
-=======
-                    completionPercentage,
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                 },
             },
             {
@@ -200,11 +151,7 @@ export class SurveyResponseRepository {
 
     async complete(
         responseId: string
-<<<<<<< HEAD
     ): Promise<ISurveyResponseDocument | null> {
-=======
-    ): Promise<ISurveyResponse | null> {
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         return SurveyResponseModel.findByIdAndUpdate(
             responseId,
             {
@@ -221,20 +168,14 @@ export class SurveyResponseRepository {
     }
 
     async abandon(
-<<<<<<< HEAD
         responseId: string,
         metadata?: Record<string, unknown>
     ): Promise<ISurveyResponseDocument | null> {
-=======
-        responseId: string
-    ): Promise<ISurveyResponse | null> {
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         return SurveyResponseModel.findByIdAndUpdate(
             responseId,
             {
                 $set: {
                     status: SurveyResponseStatus.ABANDONED,
-<<<<<<< HEAD
                     ...(metadata ? { metadata } : {}),
                 },
             },
@@ -254,8 +195,6 @@ export class SurveyResponseRepository {
                 $set: {
                     status: SurveyResponseStatus.FAILED,
                     ...(error ? { "metadata.failureError": error } : {}),
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                 },
             },
             {

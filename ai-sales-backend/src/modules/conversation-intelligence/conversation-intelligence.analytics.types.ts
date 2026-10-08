@@ -13,11 +13,7 @@ export interface ConversationAnalytics {
     competitorMentions: {
         competitor: string;
         count: number;
-<<<<<<< HEAD
     }[];
-=======
-    };
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     purchaseRate: number;
     demoRequestRate: number;
     followUpRate: number;

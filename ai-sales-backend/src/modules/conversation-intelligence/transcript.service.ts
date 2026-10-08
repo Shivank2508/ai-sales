@@ -2,11 +2,7 @@ import { ConversationTranscript } from "./conversation-intelligence.types";
 
 
 export class TranscriptService {
-<<<<<<< HEAD
     buildTranscript(conversation: { _id: unknown; productId?: unknown; messages?: Array<{ role: string; content: string; createdAt?: Date }> }): ConversationTranscript {
-=======
-    buildTranscript(conversation: { _id: unknown; productId: unknown; messages?: Array<{ role: string; content: string; createdAt?: Date }> }): ConversationTranscript {
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         const messages = (conversation.messages ?? [])
             .filter(message => {
                 const role = message.role?.toLowerCase();
@@ -25,11 +21,7 @@ export class TranscriptService {
 
         return {
             conversationId: String(conversation._id),
-<<<<<<< HEAD
             productId: conversation.productId ? String(conversation.productId) : "",
-=======
-            productId: String(conversation.productId),
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
             messages,
             text
         };

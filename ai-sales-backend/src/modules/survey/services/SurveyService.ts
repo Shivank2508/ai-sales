@@ -12,7 +12,6 @@ export class SurveyService {
     private readonly responseRepository = new SurveyResponseRepository()
 
     async getSurvey(surveyId: string) {
-<<<<<<< HEAD
         const survey = await this.surveyRepository.findById(surveyId);
         if (!survey) return null;
         const questions = await this.questionRepository.findBySurveyId(surveyId);
@@ -42,18 +41,12 @@ export class SurveyService {
     }
 
 
-=======
-        return this.surveyRepository.findById(surveyId)
-    }
-
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     async getQuestions(surveyId: string) {
         return this.questionRepository.findBySurveyId(
             surveyId
         );
     }
 
-<<<<<<< HEAD
     async saveQuestions(surveyId: string, questions: Partial<ISurveyQuestion>[]) {
         await this.questionRepository.deleteBySurveyId(surveyId);
         if (questions && questions.length > 0) {
@@ -68,8 +61,6 @@ export class SurveyService {
         return this.getSurvey(surveyId);
     }
 
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     async startSurvey(params: {
         surveyId: string;
         campaignId: string;
@@ -157,7 +148,6 @@ export class SurveyService {
         language?: string;
         welcomeMessage?: string;
         endMessage?: string;
-<<<<<<< HEAD
         createdBy?: string;
         questions?: Partial<ISurveyQuestion>[];
     }) {
@@ -194,24 +184,6 @@ export class SurveyService {
         }
 
         return this.getSurvey(survey!._id.toString());
-=======
-        createdBy: string;
-    }) {
-        const existing = await this.surveyRepository.findByCampaignId(data.campaignId)
-        if (existing) {
-            throw new Error("Survey already exists for this campaign");
-        }
-
-        return this.surveyRepository.create({
-            campaignId: new mongoose.Types.ObjectId(data.campaignId),
-            name: data.name,
-            description: data.description,
-            language: data.language || "en-IN",
-            welcomeMessage: data.welcomeMessage,
-            endMessage: data.endMessage,
-            createdBy: new mongoose.Types.ObjectId(data.createdBy),
-        });
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     }
 
     async updateSurvey(surveyId: string, data: Partial<{

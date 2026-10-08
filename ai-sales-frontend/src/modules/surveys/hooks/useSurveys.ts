@@ -5,15 +5,11 @@ import { CAMPAIGN_KEYS } from "../../campaigns/hooks/useCampaigns";
 
 export const SURVEY_KEYS = {
   all: ["surveys"] as const,
-<<<<<<< HEAD
   list: (campaignId?: string) => [...SURVEY_KEYS.all, "list", campaignId || "all"] as const,
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
   detail: (id: string) => [...SURVEY_KEYS.all, "detail", id] as const,
   byCampaign: (campaignId: string) => [...SURVEY_KEYS.all, "byCampaign", campaignId] as const,
 };
 
-<<<<<<< HEAD
 export const useSurveys = (campaignId?: string) => {
   return useQuery({
     queryKey: SURVEY_KEYS.list(campaignId),
@@ -22,8 +18,6 @@ export const useSurveys = (campaignId?: string) => {
 };
 
 
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 export const useSurvey = (surveyId?: string) => {
   return useQuery({
     queryKey: SURVEY_KEYS.detail(surveyId || ""),
@@ -45,11 +39,7 @@ export const useCreateSurvey = () => {
   return useMutation({
     mutationFn: ({ campaignId, payload }: { campaignId: string; payload: Partial<ISurvey> }) =>
       surveyApi.createSurvey(campaignId, payload),
-<<<<<<< HEAD
     onSuccess: () => {
-=======
-    onSuccess: (data) => {
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
       queryClient.invalidateQueries({ queryKey: SURVEY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: CAMPAIGN_KEYS.all });
     },
@@ -79,7 +69,6 @@ export const useSaveQuestions = () => {
     },
   });
 };
-<<<<<<< HEAD
 
 export const useGenerateAISurvey = () => {
   const queryClient = useQueryClient();
@@ -158,5 +147,3 @@ export const useSynthesizeVoice = () => {
     mutationFn: (text: string) => surveyApi.synthesizeVoice(text),
   });
 };
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a

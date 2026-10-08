@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { axiosInstance } from "../../../services/api/apiClient";
 import { mockStore } from "../../../services/api/mockDataStore";
 import { IAIAgent } from "../../../types";
@@ -40,21 +39,6 @@ export const agentApi = {
     }
     const list = mockStore.getAgents();
     const found = list.find((a) => a._id === id);
-=======
-import { mockStore } from "../../../services/api/mockDataStore";
-import { IAIAgent } from "../../../types";
-
-export const agentApi = {
-  // GET all AI agents
-  async getAgents(): Promise<IAIAgent[]> {
-    return mockStore.getAgents();
-  },
-
-  // GET single agent
-  async getAgentById(id: string): Promise<IAIAgent> {
-    const list = mockStore.getAgents();
-    const found = list.find((a) => a._id === id || a.agentId === id);
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     if (!found) {
       throw new Error(`Agent with ID ${id} not found.`);
     }
@@ -63,7 +47,6 @@ export const agentApi = {
 
   // UPDATE agent
   async updateAgent(id: string, updates: Partial<IAIAgent>): Promise<IAIAgent> {
-<<<<<<< HEAD
     try {
       const res = await axiosInstance.put(`/api/agents/${id}`, updates);
       if (res.data?.data) {
@@ -74,16 +57,11 @@ export const agentApi = {
     }
     const list = mockStore.getAgents();
     const idx = list.findIndex((a) => a._id === id);
-=======
-    const list = mockStore.getAgents();
-    const idx = list.findIndex((a) => a._id === id || a.agentId === id);
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     if (idx !== -1) {
       list[idx] = { ...list[idx], ...updates, updatedAt: new Date().toISOString() };
       mockStore.saveAgents(list);
       return list[idx];
     }
-<<<<<<< HEAD
     throw new Error(`Agent with ID ${id} not found.`);
   },
 
@@ -131,16 +109,5 @@ export const agentApi = {
       console.warn("Backend getProductConversations error:", err);
       return [];
     }
-=======
-    throw new Error(`Agent ${id} not found.`);
-  },
-
-  // ASSIGN agent to campaign
-  async assignCampaign(agentId: string, campaignId: string): Promise<IAIAgent> {
-    const agent = await this.getAgentById(agentId);
-    const assigned = new Set(agent.assignedCampaignIds || []);
-    assigned.add(campaignId);
-    return this.updateAgent(agent._id, { assignedCampaignIds: Array.from(assigned) });
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
   },
 };

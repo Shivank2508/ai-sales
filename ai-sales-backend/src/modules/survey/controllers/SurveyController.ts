@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from "express";
-<<<<<<< HEAD
 import mongoose from "mongoose";
 import { SurveyService } from "../services/SurveyService";
 import { AISurveyGeneratorService } from "../services/AISurveyGeneratorService";
@@ -141,32 +140,19 @@ export class SurveyController {
             next(error);
         }
     };
-=======
-import { SurveyService } from "../services/SurveyService";
-import { success } from "zod";
-
-export class SurveyController {
-    private readonly surveyService = new SurveyService()
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
     createSurvey = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const survey = await this.surveyService.createSurvey({
                 ...req.body,
-<<<<<<< HEAD
                 createdBy: (req as any).user?._id || req.body.createdBy,
             });
-=======
-                createdBy: req.user?._id || req.body.createdBy,
-            })
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
             return res.status(201).json({
                 success: true,
                 data: survey,
             });
         } catch (error) {
-<<<<<<< HEAD
             next(error);
         }
     };
@@ -216,15 +202,6 @@ export class SurveyController {
         try {
             const id = String(req.params.id || "");
             const survey = await this.surveyService.getSurvey(id);
-=======
-            next(error)
-        }
-    }
-
-    getSurvey = async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const survey = await this.surveyService.getSurvey(req.params.id)
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
             if (!survey) {
                 return res.status(404).json({
@@ -235,7 +212,6 @@ export class SurveyController {
 
             return res.json({
                 success: true,
-<<<<<<< HEAD
                 data: survey,
             });
         } catch (error) {
@@ -255,27 +231,6 @@ export class SurveyController {
             next(error);
         }
     };
-=======
-                data: survey
-            })
-        } catch (error) {
-            next(error)
-        }
-    }
-
-    updateSurvey = async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const survey = await this.surveyService.updateSurvey(req.params.id, req.body)
-            return res.json({
-                success: true,
-                data: survey,
-            })
-
-        } catch (error) {
-            next(error)
-        }
-    }
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
     getQuestions = async (
         req: Request,
@@ -283,15 +238,8 @@ export class SurveyController {
         next: NextFunction
     ) => {
         try {
-<<<<<<< HEAD
             const id = String(req.params.id || "");
             const questions = await this.surveyService.getQuestions(id);
-=======
-            const questions =
-                await this.surveyService.getQuestions(
-                    req.params.id
-                );
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
             return res.json({
                 success: true,
@@ -308,19 +256,11 @@ export class SurveyController {
         next: NextFunction
     ) => {
         try {
-<<<<<<< HEAD
             const id = String(req.params.id || "");
             const question = await this.surveyService.addQuestion(
                 id,
                 req.body
             );
-=======
-            const question =
-                await this.surveyService.addQuestion(
-                    req.params.id,
-                    req.body
-                );
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
             return res.status(201).json({
                 success: true,
@@ -337,19 +277,11 @@ export class SurveyController {
         next: NextFunction
     ) => {
         try {
-<<<<<<< HEAD
             const questionId = String(req.params.questionId || "");
             const question = await this.surveyService.updateQuestion(
                 questionId,
                 req.body
             );
-=======
-            const question =
-                await this.surveyService.updateQuestion(
-                    req.params.questionId,
-                    req.body
-                );
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
             return res.json({
                 success: true,
@@ -366,15 +298,8 @@ export class SurveyController {
         next: NextFunction
     ) => {
         try {
-<<<<<<< HEAD
             const questionId = String(req.params.questionId || "");
             const result = await this.surveyService.deleteQuestion(questionId);
-=======
-            const result =
-                await this.surveyService.deleteQuestion(
-                    req.params.questionId
-                );
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
             return res.json({
                 success: true,
@@ -391,7 +316,6 @@ export class SurveyController {
         next: NextFunction
     ) => {
         try {
-<<<<<<< HEAD
             const id = String(req.params.id || "");
             const result = await this.surveyService.startSurvey({
                 surveyId: id,
@@ -399,15 +323,6 @@ export class SurveyController {
                 leadId: req.body.leadId ? String(req.body.leadId) : undefined,
                 conversationId: req.body.conversationId ? String(req.body.conversationId) : undefined,
             });
-=======
-            const result =
-                await this.surveyService.startSurvey({
-                    surveyId: req.params.id,
-                    campaignId: req.body.campaignId,
-                    leadId: req.body.leadId,
-                    conversationId: req.body.conversationId,
-                });
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
             return res.status(201).json({
                 success: true,
@@ -424,19 +339,11 @@ export class SurveyController {
         next: NextFunction
     ) => {
         try {
-<<<<<<< HEAD
             const responseId = String(req.params.responseId || "");
             const result = await this.surveyService.answerQuestion(
                 responseId,
                 req.body
             );
-=======
-            const result =
-                await this.surveyService.answerQuestion(
-                    req.params.responseId,
-                    req.body
-                );
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
             return res.json({
                 success: true,

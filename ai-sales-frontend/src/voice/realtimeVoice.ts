@@ -146,21 +146,12 @@ export class RealtimeVoiceClient {
     stopMicrophone() {
         this.workletNode?.disconnect();
         this.sourceNode?.disconnect();
-<<<<<<< HEAD
         this.microphoneStream?.getTracks().forEach(track => track.stop());
         this.audioContext?.close().catch(() => {});
         this.workletNode = undefined;
         this.sourceNode = undefined;
         this.microphoneStream = undefined;
         this.audioContext = undefined;
-=======
-        this.microphoneStream?.getTracks().forEach(track => track.stop)
-        this.audioContext?.close()
-        this.workletNode = undefined
-        this.sourceNode = undefined
-        this.microphoneStream = undefined
-        this.audioContext = undefined
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     }
 
     stopSpeaking() {
@@ -187,11 +178,7 @@ export class RealtimeVoiceClient {
     }
 
     disconnect() {
-<<<<<<< HEAD
         this.stopMicrophone();
-=======
-        this.startMicrophone();
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         this.socket?.close();
         this.socket = undefined;
     }

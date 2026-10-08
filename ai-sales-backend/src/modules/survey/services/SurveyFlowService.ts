@@ -5,27 +5,15 @@ import {
 } from "../models/SurveyQuestion.model";
 
 export interface FlowResult {
-<<<<<<< HEAD
     action: QuestionAction | string;
-=======
-    action: QuestionAction;
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     nextQuestionId?: string;
 }
 
 export class SurveyFlowService {
-<<<<<<< HEAD
-=======
-
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     evaluateNextQuestion(
         question: ISurveyQuestion,
         answers: Record<string, unknown>
     ): FlowResult {
-<<<<<<< HEAD
-=======
-
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         if (!question.conditions?.length) {
             return {
                 action: QuestionAction.NEXT,
@@ -33,7 +21,6 @@ export class SurveyFlowService {
         }
 
         for (const condition of question.conditions) {
-<<<<<<< HEAD
             // Target field can be question.questionId or condition.field
             const targetKey = condition.field || question.questionId;
             const answer = answers[targetKey] !== undefined ? answers[targetKey] : answers[question.questionId];
@@ -42,22 +29,6 @@ export class SurveyFlowService {
                 return {
                     action: condition.action || QuestionAction.NEXT,
                     nextQuestionId: condition.nextQuestionId,
-=======
-
-            const answer =
-                answers[condition.field];
-
-            if (
-                this.matches(
-                    condition,
-                    answer
-                )
-            ) {
-                return {
-                    action: condition.action,
-                    nextQuestionId:
-                        condition.nextQuestionId,
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                 };
             }
         }
@@ -67,7 +38,6 @@ export class SurveyFlowService {
         };
     }
 
-<<<<<<< HEAD
     evaluateCondition(
         condition: IQuestionCondition,
         answer: unknown
@@ -75,13 +45,10 @@ export class SurveyFlowService {
         return this.matches(condition, answer);
     }
 
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     private matches(
         condition: IQuestionCondition,
         answer: unknown
     ): boolean {
-<<<<<<< HEAD
         if (condition.operator === "is_empty") {
             return answer === undefined || answer === null || answer === "" || (Array.isArray(answer) && answer.length === 0);
         }
@@ -158,60 +125,11 @@ export class SurveyFlowService {
             case "lte":
             case "<=":
                 return Number(normalizedAnswer) <= Number(normalizedExpected);
-=======
-
-        switch (condition.operator) {
-
-            case "equals":
-                return (
-                    String(answer) ===
-                    String(condition.value)
-                );
-
-            case "not_equals":
-                return (
-                    String(answer) !==
-                    String(condition.value)
-                );
-
-            case "contains":
-                return String(answer)
-                    .toLowerCase()
-                    .includes(
-                        String(condition.value)
-                            .toLowerCase()
-                    );
-
-            case "not_contains":
-                return !String(answer)
-                    .toLowerCase()
-                    .includes(
-                        String(condition.value)
-                            .toLowerCase()
-                    );
-
-            case "in":
-                return (
-                    Array.isArray(condition.value) &&
-                    condition.value.includes(
-                        String(answer)
-                    )
-                );
-
-            case "not_in":
-                return (
-                    Array.isArray(condition.value) &&
-                    !condition.value.includes(
-                        String(answer)
-                    )
-                );
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
             default:
                 return false;
         }
     }
-<<<<<<< HEAD
 
     private normalizeValue(val: unknown): unknown {
         if (typeof val === "boolean") return val;
@@ -234,6 +152,4 @@ export class SurveyFlowService {
         }
         return String(a).toLowerCase() === String(b).toLowerCase();
     }
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 }

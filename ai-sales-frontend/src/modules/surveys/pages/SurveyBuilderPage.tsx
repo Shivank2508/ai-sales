@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useCampaign, usePublishCampaign } from "../../campaigns/hooks/useCampaigns";
-<<<<<<< HEAD
 import {
   useSurveyByCampaign,
   useSaveQuestions,
@@ -13,9 +12,6 @@ import {
   useSynthesizeVoice,
   useUploadSurvey,
 } from "../hooks/useSurveys";
-=======
-import { useSurveyByCampaign, useSaveQuestions, useUpdateSurvey, useCreateSurvey } from "../hooks/useSurveys";
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 import { surveyApi } from "../api/surveyApi";
 import { QuestionListPanel } from "../components/QuestionListPanel";
 import { QuestionEditor } from "../components/QuestionEditor";
@@ -47,7 +43,6 @@ import {
   Sliders,
   PanelLeftClose,
   PanelRightClose,
-<<<<<<< HEAD
   Wand2,
   PhoneCall,
   Volume2,
@@ -58,8 +53,6 @@ import {
   UploadCloud,
   FileUp,
   FileCode,
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 } from "lucide-react";
 
 export const SurveyBuilderPage: React.FC = () => {
@@ -75,14 +68,11 @@ export const SurveyBuilderPage: React.FC = () => {
   const updateSurveyMutation = useUpdateSurvey();
   const saveQuestionsMutation = useSaveQuestions();
   const publishCampaignMutation = usePublishCampaign();
-<<<<<<< HEAD
   const aiGenerateSurveyMutation = useGenerateAISurvey();
   const aiEditSurveyMutation = useEditAISurvey();
   const importQuestionsMutation = useImportQuestions();
   const ttsMutation = useSynthesizeVoice();
   const uploadSurveyMutation = useUploadSurvey();
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
   // Local Questions State
   const [questions, setQuestions] = useState<ISurveyQuestion[]>([]);
@@ -98,7 +88,6 @@ export const SurveyBuilderPage: React.FC = () => {
   const [isValidationOpen, setIsValidationOpen] = useState(false);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
 
-<<<<<<< HEAD
   // AI Modal States
   const [showAiGenModal, setShowAiGenModal] = useState(false);
   const [aiTopic, setAiTopic] = useState("");
@@ -120,11 +109,6 @@ export const SurveyBuilderPage: React.FC = () => {
   const [activeVoiceQIndex, setActiveVoiceQIndex] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-=======
-  // Mobile / Responsive panel visibility
-  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
-  const [rightPanelOpen, setRightPanelOpen] = useState(true);
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
   // Synchronize local questions with survey query
   useEffect(() => {
@@ -168,7 +152,6 @@ export const SurveyBuilderPage: React.FC = () => {
     }
   };
 
-<<<<<<< HEAD
   const handleAddQuestion = (type: QuestionType) => {
     const newId = `q_${Date.now()}`;
     const newQ: ISurveyQuestion = {
@@ -262,82 +245,10 @@ export const SurveyBuilderPage: React.FC = () => {
     if (!selectedQuestionId) return;
     const nextList = questions.map((q) => (q.questionId === selectedQuestionId ? { ...q, ...updates } : q));
     setQuestions(nextList);
-=======
-  // Add Question
-  const handleAddQuestion = () => {
-    const nextIdx = questions.length + 1;
-    const newQ: ISurveyQuestion = {
-      surveyId: survey?._id,
-      questionId: `q${nextIdx}_${Date.now().toString().slice(-4)}`,
-      order: nextIdx,
-      type: QuestionType.SINGLE_CHOICE,
-      text: "What is your feedback on this product?",
-      required: true,
-      options: [
-        { value: "opt_1", label: "Option 1" },
-        { value: "opt_2", label: "Option 2" },
-      ],
-      conditionGroups: [],
-    };
-
-    const updated = [...questions, newQ];
-    setQuestions(updated);
-    setSelectedQuestionId(newQ.questionId);
     setHasUnsavedChanges(true);
     setSaveStatus("unsaved");
   };
 
-  // Duplicate Question
-  const handleDuplicateQuestion = (q: ISurveyQuestion) => {
-    const nextIdx = questions.length + 1;
-    const duplicated: ISurveyQuestion = {
-      ...JSON.parse(JSON.stringify(q)),
-      questionId: `q${nextIdx}_${Date.now().toString().slice(-4)}`,
-      order: nextIdx,
-      text: `${q.text} (Copy)`,
-    };
-    const updated = [...questions, duplicated];
-    setQuestions(updated);
-    setSelectedQuestionId(duplicated.questionId);
-    setHasUnsavedChanges(true);
-  };
-
-  // Delete Question
-  const handleDeleteQuestion = (questionId: string) => {
-    const updated = questions
-      .filter((q) => q.questionId !== questionId)
-      .map((q, idx) => ({ ...q, order: idx + 1 }));
-    setQuestions(updated);
-    if (selectedQuestionId === questionId) {
-      setSelectedQuestionId(updated.length > 0 ? updated[0].questionId : null);
-    }
-    setHasUnsavedChanges(true);
-  };
-
-  // Move Question Up/Down
-  const handleMoveQuestion = (fromIdx: number, toIdx: number) => {
-    if (toIdx < 0 || toIdx >= questions.length) return;
-    const copy = [...questions];
-    const [moved] = copy.splice(fromIdx, 1);
-    copy.splice(toIdx, 0, moved);
-    const reindexed = copy.map((q, idx) => ({ ...q, order: idx + 1 }));
-    setQuestions(reindexed);
-    setHasUnsavedChanges(true);
-  };
-
-  // Update current question
-  const handleUpdateActiveQuestion = (updates: Partial<ISurveyQuestion>) => {
-    if (!selectedQuestionId) return;
-    const updated = questions.map((q) =>
-      q.questionId === selectedQuestionId ? { ...q, ...updates } : q
-    );
-    setQuestions(updated);
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
-    setHasUnsavedChanges(true);
-    setSaveStatus("unsaved");
-  };
-
-<<<<<<< HEAD
   // AI Survey Generation Handler
   const handleAiGenerateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -465,35 +376,10 @@ export const SurveyBuilderPage: React.FC = () => {
 
   const handleRunValidation = () => {
     const res = surveyApi.validateSurvey(survey ? { ...survey, questions } : null);
-=======
-  // Run Pre-flight Validation
-  const handleRunValidation = () => {
-    const res = surveyApi.validateSurvey(
-      survey ? { ...survey, questions } : null
-    );
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     setValidationResult(res);
     setIsValidationOpen(true);
   };
 
-<<<<<<< HEAD
-=======
-  // Publish
-  const handlePublish = async () => {
-    if (!survey) return;
-    const res = surveyApi.validateSurvey({ ...survey, questions });
-    if (!res.isValid) {
-      setValidationResult(res);
-      setIsValidationOpen(true);
-      return;
-    }
-    await handleSave();
-    await publishCampaignMutation.mutateAsync(campaignId);
-    setPublishModalOpen(false);
-    navigate(`/campaigns/${campaignId}?tab=overview`);
-  };
-
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
   if (campaignLoading || surveyLoading) {
     return <LoadingSpinner message="Loading Survey Builder..." />;
   }
@@ -522,11 +408,7 @@ export const SurveyBuilderPage: React.FC = () => {
                 ) : saveStatus === "unsaved" ? (
                   <span className="text-danger">● Unsaved changes</span>
                 ) : (
-<<<<<<< HEAD
                   <span className="text-success">● Saved ({questions.length} Questions)</span>
-=======
-                  <span className="text-success">● Saved</span>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                 )}
               </span>
             </div>
@@ -534,7 +416,6 @@ export const SurveyBuilderPage: React.FC = () => {
 
           {/* Right Action Buttons */}
           <div className="d-flex align-items-center gap-2 flex-wrap">
-<<<<<<< HEAD
             {/* AI Generate Button */}
             <button
               className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 shadow-sm"
@@ -592,12 +473,6 @@ export const SurveyBuilderPage: React.FC = () => {
             {activeQuestion && (
               <button
                 className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
-=======
-            {/* Logic Branching trigger for active question */}
-            {activeQuestion && (
-              <button
-                className="btn btn-outline-purple btn-sm d-flex align-items-center gap-1 border-purple text-purple bg-purple-subtle"
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                 onClick={() => setConditionModalQuestion(activeQuestion)}
                 style={{ fontSize: "12px" }}
               >
@@ -611,14 +486,6 @@ export const SurveyBuilderPage: React.FC = () => {
               <span className="d-none d-sm-inline">Flow</span>
             </Link>
 
-<<<<<<< HEAD
-=======
-            <Link to={`/campaigns/${campaignId}/survey/preview`} className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1">
-              <Play size={14} />
-              <span>Preview</span>
-            </Link>
-
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
             <button className="btn btn-outline-info btn-sm d-flex align-items-center gap-1" onClick={handleRunValidation}>
               <ShieldCheck size={14} />
               <span>Validate</span>
@@ -661,24 +528,16 @@ export const SurveyBuilderPage: React.FC = () => {
               questions={questions}
               selectedQuestionId={selectedQuestionId}
               onSelectQuestion={(id) => setSelectedQuestionId(id)}
-<<<<<<< HEAD
               onAddQuestion={() => handleAddQuestion(QuestionType.SINGLE_CHOICE)}
               onDuplicateQuestion={(q) => handleDuplicateQuestion(q.questionId)}
               onDeleteQuestion={handleDeleteQuestion}
               onMoveQuestion={handleMoveQuestionByIndex}
-=======
-              onAddQuestion={handleAddQuestion}
-              onDuplicateQuestion={handleDuplicateQuestion}
-              onDeleteQuestion={handleDeleteQuestion}
-              onMoveQuestion={handleMoveQuestion}
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
             />
           </div>
 
           {/* Center Column: Question Editor */}
           <div className="col-12 col-md-6 col-lg-6 h-100 overflow-hidden border-end">
             {activeQuestion ? (
-<<<<<<< HEAD
               <div className="d-flex flex-column h-100">
                 <div className="p-2 border-bottom bg-light d-flex justify-content-between align-items-center">
                   <span className="small fw-bold text-dark">Editing Question #{activeQuestion.order}</span>
@@ -712,50 +571,24 @@ export const SurveyBuilderPage: React.FC = () => {
                     Generate with AI
                   </button>
                 </div>
-=======
-              <QuestionEditor
-                question={activeQuestion}
-                onChange={handleUpdateActiveQuestion}
-              />
-            ) : (
-              <div className="d-flex flex-column align-items-center justify-content-center h-100 text-center p-5 text-muted">
-                <Workflow size={48} className="mb-2 text-primary" />
-                <h6>No Question Selected</h6>
-                <p className="small mb-3">Select a question from the left panel or click Add Question to begin.</p>
-                <button className="btn btn-primary btn-sm" onClick={handleAddQuestion}>
-                  + Add First Question
-                </button>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
               </div>
             )}
           </div>
 
-<<<<<<< HEAD
           {/* Right Column: Settings & Logic summary */}
           <div className="col-12 col-md-3 col-lg-3 h-100 overflow-hidden">
-=======
-          {/* Right Column: Question Settings */}
-          <div className="col-12 col-md-3 col-lg-3 h-100 overflow-hidden bg-light-subtle">
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
             {activeQuestion ? (
               <QuestionSettingsPanel
                 question={activeQuestion}
                 onChange={handleUpdateActiveQuestion}
               />
             ) : (
-<<<<<<< HEAD
               <div className="p-3 text-secondary small text-center">Select a question to inspect properties.</div>
-=======
-              <div className="p-4 text-muted small text-center">
-                Select a question to inspect properties.
-              </div>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
             )}
           </div>
         </div>
       </div>
 
-<<<<<<< HEAD
       {/* AI GENERATE SURVEY MODAL */}
       {showAiGenModal && (
         <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.6)" }} tabIndex={-1}>
@@ -1144,16 +977,12 @@ export const SurveyBuilderPage: React.FC = () => {
       )}
 
       {/* Logic Branching Modal */}
-=======
-      {/* Condition Builder Modal */}
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
       {conditionModalQuestion && (
         <ConditionBuilder
           question={conditionModalQuestion}
           allQuestions={questions}
           isOpen={Boolean(conditionModalQuestion)}
           onClose={() => setConditionModalQuestion(null)}
-<<<<<<< HEAD
           onSave={(updatedGroups) => {
             const nextList = questions.map((q) =>
               q.questionId === conditionModalQuestion.questionId
@@ -1164,16 +993,11 @@ export const SurveyBuilderPage: React.FC = () => {
             setHasUnsavedChanges(true);
             setSaveStatus("unsaved");
             handleSave(nextList);
-=======
-          onSave={(groups) => {
-            handleUpdateActiveQuestion({ conditionGroups: groups });
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
             setConditionModalQuestion(null);
           }}
         />
       )}
 
-<<<<<<< HEAD
       {/* Pre-flight Validation Results Modal */}
       {isValidationOpen && validationResult && (
         <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }} tabIndex={-1}>
@@ -1208,108 +1032,12 @@ export const SurveyBuilderPage: React.FC = () => {
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => setIsValidationOpen(false)}>
                   Close
                 </button>
-=======
-      {/* Pre-flight Validation Drawer/Modal */}
-      {isValidationOpen && validationResult && (
-        <div
-          className="modal fade show d-block"
-          tabIndex={-1}
-          style={{ backgroundColor: "rgba(15, 23, 42, 0.7)", zIndex: 1065 }}
-          onClick={() => setIsValidationOpen(false)}
-        >
-          <div
-            className="modal-dialog modal-dialog-centered"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: "560px" }}
-          >
-            <div className="modal-content shadow-lg border-0">
-              <div className="modal-header border-bottom py-3">
-                <div className="d-flex align-items-center gap-2">
-                  <ShieldCheck size={20} className={validationResult.isValid ? "text-success" : "text-warning"} />
-                  <h5 className="modal-title fs-6 fw-bold mb-0">Pre-Flight Survey Validation</h5>
-                </div>
-                <button type="button" className="btn-close" onClick={() => setIsValidationOpen(false)}></button>
-              </div>
-
-              <div className="modal-body p-4">
-                {/* Score */}
-                <div className="p-3 border rounded-3 bg-light-subtle d-flex justify-content-between align-items-center mb-3">
-                  <div>
-                    <span className="text-secondary small fw-bold text-uppercase d-block">Readiness Score</span>
-                    <h4 className="fw-bold mb-0">{validationResult.score}%</h4>
-                  </div>
-                  <span
-                    className={`badge ${
-                      validationResult.isValid
-                        ? "bg-success-subtle text-success border border-success"
-                        : "bg-danger-subtle text-danger border border-danger"
-                    }`}
-                  >
-                    {validationResult.isValid ? "✓ Ready to Publish" : "✕ Blockers Detected"}
-                  </span>
-                </div>
-
-                {/* Issues List */}
-                <div className="d-flex flex-column gap-2 mb-3">
-                  {validationResult.issues.map((issue) => (
-                    <div
-                      key={issue.id}
-                      className={`p-2 border rounded-2 small ${
-                        issue.level === "error"
-                          ? "bg-danger-subtle border-danger-subtle text-danger"
-                          : "bg-warning-subtle border-warning-subtle text-warning-emphasis"
-                      }`}
-                    >
-                      <div className="fw-bold">{issue.title}</div>
-                      <div style={{ fontSize: "11.5px" }}>{issue.message}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Passed Checks */}
-                <div className="border-top pt-2">
-                  <span className="small fw-bold text-secondary text-uppercase mb-2 d-block" style={{ fontSize: "11px" }}>
-                    Passed Checks ({validationResult.passedChecks.length})
-                  </span>
-                  <div className="d-flex flex-column gap-1">
-                    {validationResult.passedChecks.map((check, idx) => (
-                      <div key={idx} className="d-flex align-items-center gap-2 small text-success">
-                        <CheckCircle2 size={13} />
-                        <span>{check}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal-footer border-top bg-light py-2">
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-secondary px-3"
-                  onClick={() => setIsValidationOpen(false)}
-                >
-                  Close
-                </button>
-                {validationResult.isValid && (
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-success px-4"
-                    onClick={() => {
-                      setIsValidationOpen(false);
-                      setPublishModalOpen(true);
-                    }}
-                  >
-                    Proceed to Publish
-                  </button>
-                )}
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
               </div>
             </div>
           </div>
         </div>
       )}
 
-<<<<<<< HEAD
       {/* Confirm Publish Modal */}
       {publishModalOpen && (
         <ConfirmModal
@@ -1324,26 +1052,10 @@ export const SurveyBuilderPage: React.FC = () => {
           }}
           onCancel={() => setPublishModalOpen(false)}
           confirmText="Publish Live"
-=======
-      {/* Publish Confirmation Modal */}
-      {publishModalOpen && (
-        <ConfirmModal
-          isOpen={publishModalOpen}
-          title="Publish Survey & Activate Campaign?"
-          message="Once published, the conversational AI agent will immediately begin executing this survey with live customers."
-          variant="success"
-          confirmText="Confirm & Publish"
-          onConfirm={handlePublish}
-          onCancel={() => setPublishModalOpen(false)}
-          isLoading={publishCampaignMutation.isPending}
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         />
       )}
     </div>
   );
 };
-<<<<<<< HEAD
 
 export default SurveyBuilderPage;
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a

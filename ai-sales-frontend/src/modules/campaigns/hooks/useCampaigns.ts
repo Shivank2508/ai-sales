@@ -87,7 +87,6 @@ export const useDeleteCampaign = () => {
     },
   });
 };
-<<<<<<< HEAD
 
 export const useGenerateAICampaign = () => {
   const queryClient = useQueryClient();
@@ -146,5 +145,3 @@ export const useCallLeadWithAI = () => {
     },
   });
 };
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a

@@ -1,13 +1,12 @@
-import { WebSocket, WebSocketServer, } from "ws";
-import { RealtimeVoiceService, } from "./realtime.voice.service";
-import { RealtimeClientMessage, RealtimeServerMessage, } from "./realtime.voice.types";
-import { SarvamTTSStreamService, } from "./sarvam-tts-stream.service";
-import { SarvamSTTStreamService, } from "./sarvam-stt-stream.service";
-import { VoiceLatencyService } from "./voice-latency.service";
-import { VoiceLatencyMetrics } from "./voice-latency.types";
+import {
+    WebSocket,
+    WebSocketServer,
+} from "ws";
 
+import {
+    RealtimeVoiceService,
+} from "./realtime.voice.service";
 
-<<<<<<< HEAD
 import {
     RealtimeClientMessage,
     RealtimeServerMessage,
@@ -20,8 +19,6 @@ import {
 import {
     SarvamSTTStreamService,
 } from "./sarvam-stt-stream.service";
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
 
 interface VoiceConnectionState {
@@ -31,14 +28,11 @@ interface VoiceConnectionState {
     transcript: string;
     stt?: SarvamSTTStreamService;
     tts?: SarvamTTSStreamService;
-    ttsGeneration: number;
-    latency: VoiceLatencyMetrics;
 }
 
 
 export class RealtimeVoiceGateway {
-    private readonly latencyService =
-        new VoiceLatencyService();
+
     private readonly voiceService =
         new RealtimeVoiceService();
 
@@ -86,6 +80,8 @@ export class RealtimeVoiceGateway {
                         }
                     }
                 );
+
+
                 socket.on(
                     "close",
                     () => {
@@ -153,19 +149,7 @@ export class RealtimeVoiceGateway {
                         }
 
                         if (isFinal) {
-<<<<<<< HEAD
                             state.transcript += " " + transcript
-=======
-                            state.transcript = this.appendTranscript(
-                                state.transcript,
-                                transcript
-                            );
-
-
-                            state.latency
-                                .transcriptReceivedAt =
-                                Date.now();
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                         }
 
                         this.send(socket, {
@@ -179,39 +163,6 @@ export class RealtimeVoiceGateway {
                         console.log(
                             "User started speaking"
                         );
-<<<<<<< HEAD
-=======
-                        const state = this.connections.get(socket);
-                        if (state) {
-                            state.ttsGeneration += 1;
-                            state.tts?.close();
-                            state.tts = this.createTTS(
-                                socket,
-                                state.languageCode,
-                                state.ttsGeneration
-                            );
-                            void state.tts.connect().catch((err) => {
-                                console.error(
-                                    "Failed to reconnect TTS on speech start interrupt:",
-                                    err
-                                );
-                            });
-
-                            state.latency = {
-                                ...this.latencyService
-                                    .createMetrics(),
-
-                                speechStartAt:
-                                    Date.now(),
-                            };
-                        }
-                        this.send(
-                            socket,
-                            {
-                                type: "interrupt",
-                            }
-                        );
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                     },
                     onSpeechEnd: async () => {
 
@@ -219,28 +170,9 @@ export class RealtimeVoiceGateway {
                             "User stopped speaking"
                         );
 
-<<<<<<< HEAD
                         await this.processTurn(
                             socket
                         );
-=======
-                        const state = this.connections.get(socket);
-                        if (!state) {
-                            return;
-                        }
-
-                        if (state.speechEndTimer) {
-                            clearTimeout(state.speechEndTimer);
-                        }
-                        state.latency.speechEndAt =
-                            Date.now();
-                        state.speechEndAttempts = 0;
-                        state.speechEndTimer = setTimeout(() => {
-                            void this.processTurn(socket).catch((error) => {
-                                this.handleTurnError(socket, error);
-                            });
-                        }, 300);
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                     },
 
                     onError: (error) => {
@@ -271,11 +203,7 @@ export class RealtimeVoiceGateway {
                     message.languageCode ??
                     "hi-IN";
 
-                const state: VoiceConnectionState = {
-                    productId:
-                        message.productId,
 
-<<<<<<< HEAD
                 const tts =
                     new SarvamTTSStreamService({
 
@@ -332,25 +260,13 @@ export class RealtimeVoiceGateway {
                             );
                         },
                     });
-=======
-                    conversationId:
-                        message.conversationId,
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
-                    languageCode,
 
-                    transcript: "",
-                    processingTurn: false,
-                    speechEndAttempts: 0,
-                    ttsGeneration: 0,
-                    stt,
-                    tts: undefined,
-                    latency: this.latencyService.createMetrics(),
-                };
-
+                /*
+                 * Store connection state
+                 */
                 this.connections.set(
                     socket,
-<<<<<<< HEAD
                     {
                         productId:
                             message.productId,
@@ -384,22 +300,6 @@ export class RealtimeVoiceGateway {
                     console.error("Voice streaming initialization error:", err);
                 }
 
-=======
-                    state
-                );
-
-                state.tts =
-                    this.createTTS(
-                        socket,
-                        state.languageCode,
-                        state.ttsGeneration
-                    );
-
-                await Promise.all([
-                    stt.connect(),
-                    state.tts.connect(),
-                ]);
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                 this.send(socket, {
                     type: "ready",
                     conversationId: message.conversationId || "",
@@ -476,26 +376,13 @@ export class RealtimeVoiceGateway {
 
 
                 /*
-                 * Stop current TTS stream and increment generation
-                 * to ignore any late audio frames from previous stream.
+                 * Stop current TTS stream.
+                 *
+                 * If your TTS service later has
+                 * an explicit interrupt/clear method,
+                 * use that instead.
                  */
-                state.ttsGeneration += 1;
                 state.tts?.close();
-<<<<<<< HEAD
-=======
-                state.tts =
-                    this.createTTS(
-                        socket,
-                        state.languageCode,
-                        state.ttsGeneration
-                    );
-                void state.tts.connect().catch((err) => {
-                    console.error(
-                        "Failed to reconnect TTS on interrupt:",
-                        err
-                    );
-                });
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
                 break;
             }
@@ -510,42 +397,7 @@ export class RealtimeVoiceGateway {
         }
     }
 
-<<<<<<< HEAD
 
-=======
-    private createTTS(socket: WebSocket, languageCode: string, generation: number): SarvamTTSStreamService {
-        const tts = new SarvamTTSStreamService({
-            languageCode,
-            speaker: "shubh",
-            onAudio: (audio, mimeType) => {
-                const state = this.connections.get(socket);
-                if (!state) { return; }
-                if (state.latency.firstAudioAt === undefined) {
-                    state.latency.firstAudioAt = Date.now();
-                    const metrics = this.latencyService.calculate(state.latency);
-                    console.log("VOICE LATENCY", metrics);
-                }
-                if (state.ttsGeneration !== generation) { return; }
-                this.send(socket, { type: "audio", audio, mimeType });
-            },
-            onComplete: () => {
-                const state = this.connections.get(socket);
-                if (!state || state.ttsGeneration !== generation) { return; }
-                state.latency.turnCompletedAt = Date.now();
-                const metrics = this.latencyService.calculate(state.latency);
-                console.log("VOICE TURN COMPLETE", metrics);
-
-                this.send(socket, { type: "done", latency: metrics });
-            },
-            onError: (error) => {
-                const state = this.connections.get(socket);
-                if (!state || state.ttsGeneration !== generation) { return; }
-                this.send(socket, { type: "error", message: error.message });
-            }
-        });
-        return tts;
-    }
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     private async processTurn(
         socket: WebSocket
     ) {
@@ -571,7 +423,6 @@ export class RealtimeVoiceGateway {
             return;
         }
 
-<<<<<<< HEAD
 
         /*
          * Tell client that AI is thinking
@@ -580,78 +431,6 @@ export class RealtimeVoiceGateway {
             socket,
             {
                 type: "thinking",
-=======
-        state.processingTurn = true;
-        state.latency.agentStartAt =
-            Date.now();
-        try {
-            /*
-             * Tell client that AI is thinking
-             */
-            this.send(
-                socket,
-                {
-                    type: "thinking",
-                }
-            );
-
-
-            /*
-             * Generate AI response
-             */
-            const response =
-                await this.voiceService.generateAnswer(
-                    state.productId,
-                    state.transcript,
-                    state.conversationId
-                );
-
-            state.latency.agentEndAt =
-                Date.now();
-            /*
-             * Save conversation ID
-             */
-            state.conversationId =
-                response.conversationId;
-
-
-            /*
-             * Send text answer to client
-             */
-            this.send(
-                socket,
-                {
-                    type: "answer",
-                    text: response.answer,
-                }
-            );
-
-
-            /*
-             * Send answer to streaming TTS
-             */
-            if (state.tts) {
-                state.latency.ttsStartAt =
-                    Date.now();
-                state.tts.sendText(
-                    response.answer
-                );
-
-                state.tts.flush();
-
-            } else {
-
-                /*
-                 * If TTS is not available,
-                 * complete the turn immediately.
-                 */
-                this.send(
-                    socket,
-                    {
-                        type: "done",
-                    }
-                );
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
             }
         );
 

@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 import mongoose from "mongoose";
 import { CampaignModel, CampaignStatus, ICampaign, ICampaignDocument } from "../models/Campaign.model";
-=======
-import { CampaignModel, ICampaign, ICampaignDocument } from "../models/Campaign.model";
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
 export class CampaignRepository {
     async create(
@@ -11,7 +7,6 @@ export class CampaignRepository {
     ): Promise<ICampaignDocument> {
         return CampaignModel.create(data);
     }
-<<<<<<< HEAD
 
     async findById(campaignId: string): Promise<ICampaign | null> {
         if (!mongoose.Types.ObjectId.isValid(campaignId)) {
@@ -78,6 +73,4 @@ export class CampaignRepository {
 
         return result.deletedCount === 1;
     }
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 }

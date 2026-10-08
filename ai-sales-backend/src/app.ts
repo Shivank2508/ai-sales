@@ -10,33 +10,17 @@ import { agentRouter } from "./modules/agent/agent.routes";
 import voiceRoutes from "./modules/voice/voice.routes";
 import conversationIntelligenceRoutes from "./modules/conversation-intelligence/conversation-intelligence.routes";
 import followUpRoutes from "./modules/follow-up/follow-up.routes";
-<<<<<<< HEAD
 import surveyRoutes from "./modules/survey/routes/survey.routes";
 import surveySessionRoutes from "./modules/survey/routes/survey-session.routes";
 import campaignRoutes from "./modules/campaign/routes/campaign.routes";
 import analyticsRoutes from "./modules/analytics/routes/analytics.routes";
 import businessInsightsRoutes from "./modules/insights/routes/business-insights.routes";
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-<<<<<<< HEAD
 // Health check
-=======
-app.use(cors())
-app.use(`/leads`, leadRouter);
-app.use(`/products`, productRouter);
-app.use(`/knowledge`, knowledgeRouter);
-app.use(`/documents`, documentRouter);
-app.use("/voice", voiceRoutes);
-app.use("/chat", chatRoutes);
-app.use("/api/agent", agentRouter);
-app.use("/api/conversation-intelligence", conversationIntelligenceRoutes);
-app.use("/api/follow-ups", followUpRoutes);
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 app.get("/health", (req, res) => {
     res.json({ message: "ok" });
 });

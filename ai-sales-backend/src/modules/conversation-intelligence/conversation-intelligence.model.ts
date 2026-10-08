@@ -5,18 +5,13 @@ import {
     ConversationObjection,
     ConversationOutcome,
     ConversationSentiment,
-<<<<<<< HEAD
     ObjectionType,
-=======
-    ObjectionType
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 } from "./conversation-intelligence.types";
 
 export interface ConversationIntelligenceDocument extends Document {
     conversationId: Types.ObjectId;
     productId: Types.ObjectId;
     summary: string;
-<<<<<<< HEAD
     intent: ConversationIntent | string;
     sentiment: ConversationSentiment | string;
     sentimentScore?: number;
@@ -32,22 +27,11 @@ export interface ConversationIntelligenceDocument extends Document {
     nextBestAction: string;
     recommendedAction?: string;
     leadScore?: number;
-=======
-    intent: ConversationIntent;
-    sentiment: ConversationSentiment;
-    objections: ConversationObjection[];
-    actionItems: ConversationActionItem[];
-    outcome: ConversationOutcome;
-    buyingSignals: string[];
-    competitorMentions: string[];
-    nextBestAction: string;
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     confidence: number;
     createdAt: Date;
     updatedAt: Date;
 }
 
-<<<<<<< HEAD
 const objectionSchema = new Schema(
     {
         type: {
@@ -193,117 +177,3 @@ export const ConversationIntelligenceModel = model<ConversationIntelligenceDocum
     "ConversationIntelligence",
     conversationIntelligenceSchema
 );
-=======
-const objectionSchema = new Schema({
-    type: {
-        type: String,
-        enum: Object.values(ObjectionType),
-        required: true
-    },
-    text: {
-        type: String,
-        required: true,
-
-    },
-    confidence: {
-        type: Number,
-        required: true,
-        min: 0,
-        max: 1,
-    },
-
-},
-    {
-        _id: false,
-    })
-
-
-const actionItemSchema = new Schema({
-    task: {
-        type: String,
-        required: true,
-    },
-    owner: {
-        type: String,
-        enum: ["SALES_REP", "CUSTOMER", "AI"]
-    },
-    dueDate: {
-        type: String,
-    },
-    completed: {
-        type: Boolean,
-        default: false,
-    }
-}, {
-    _id: false,
-})
-
-
-const conversationIntelligenceSchema = new Schema({
-    conversationId: {
-        type: Schema.Types.ObjectId,
-        ref: "Conversation",
-        required: true,
-        unique: true,
-        index: true,
-    },
-    productId: {
-        type: Schema.Types.ObjectId,
-        ref: "Product",
-        required: true,
-        index: true,
-    },
-    summary: {
-        type: String,
-        required: true,
-    },
-    intent: {
-        type: String,
-        enum: Object.values(ConversationIntent),
-        required: true
-    },
-    sentiment: {
-        type: String,
-        enum: Object.values(ConversationSentiment),
-        required: true
-    },
-    objections: {
-        type: [objectionSchema,],
-        default: [],
-    },
-    actionItems: {
-        type: [actionItemSchema],
-        default: [],
-    },
-    outcome: {
-        type: String,
-        enum: Object.values(ConversationOutcome),
-        required: true
-    },
-    buyingSignals: {
-        type: [String],
-        default: []
-    },
-    competitorMentions: {
-        type: [String],
-        default: []
-    },
-    nextBestAction: {
-        type: String,
-        required: true
-    },
-    confidence: {
-        type: Number,
-        required: true,
-        min: 0,
-        max: 1,
-    }
-}, {
-    timestamps: true
-})
-
-
-export const ConversationIntelligenceModel = model<ConversationIntelligenceDocument>(
-    "ConversationIntelligence", conversationIntelligenceSchema
-)
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a

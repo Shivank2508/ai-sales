@@ -247,7 +247,6 @@ export const AnalyticsPage: React.FC = () => {
           </div>
         )}
       </div>
-<<<<<<< HEAD
 
       {/* Backend Conversation Intelligence Engine Section */}
       <div className="card shadow-sm border p-4">
@@ -296,8 +295,6 @@ export const AnalyticsPage: React.FC = () => {
           </div>
         </div>
       </div>
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     </div>
   );
 };

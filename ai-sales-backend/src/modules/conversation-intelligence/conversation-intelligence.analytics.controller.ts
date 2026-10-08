@@ -14,11 +14,7 @@ export class ConversationIntelligenceAnalyticsController {
             });
         }
 
-<<<<<<< HEAD
         const analytics = await this.service.getProductAnalytics(productId as string);
-=======
-        const analytics = await this.service.getProductAnalytics(productId)
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
         return res.status(200).json({
             success: true,

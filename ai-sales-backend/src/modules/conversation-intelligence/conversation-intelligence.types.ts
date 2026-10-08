@@ -11,21 +11,12 @@ export enum ConversationIntent {
 
 export enum ConversationSentiment {
     POSITIVE = "POSITIVE",
-<<<<<<< HEAD
     NEUTRAL = "NEUTRAL",
     NEGATIVE = "NEGATIVE",
 }
 
 export enum ObjectionType {
     PRICE = "PRICE",
-=======
-    Nutral = "Nutral",
-    NEGATIVE = "NEGATIVE"
-}
-
-export enum ObjectionType {
-    PRICE = "Price",
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     PRODUCT = "PRODUCT",
     COMPETITOR = "COMPETITOR",
     CRM = "CRM",
@@ -33,11 +24,7 @@ export enum ObjectionType {
     SECURITY = "SECURITY",
     TIMING = "TIMING",
     TRUST = "TRUST",
-<<<<<<< HEAD
     OTHER = "OTHER",
-=======
-    OTHER = "OTHER"
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 }
 
 export enum ConversationOutcome {
@@ -47,7 +34,6 @@ export enum ConversationOutcome {
     PURCHASE = "PURCHASE",
     NOT_INTERESTED = "NOT_INTERESTED",
     LOST = "LOST",
-<<<<<<< HEAD
     UNKNOWN = "UNKNOWN",
 }
 
@@ -95,52 +81,11 @@ export interface ConversationTranscriptMessage {
     role: "user" | "assistant" | "system";
     content: string;
     createdAt?: Date;
-=======
-    UNKNOW = "UNKNOWN"
-}
-
-export interface ConversationObjection {
-    type: ObjectionType,
-    text: string,
-    confidence: number
-}
-
-export interface ConversationActionItem {
-    task: string,
-    owner?: "SALES_REP" | "CUSTOMER" | "AI",
-    dueDate?: string,
-    completed?: boolean
-}
-
-export interface ConversationAnalysis {
-    summary: string,
-    intent: ConversationIntent,
-    sentiment: ConversationSentiment,
-    objections: ConversationObjection[],
-    actionItems: ConversationActionItem[],
-    outcome: ConversationOutcome,
-    buyingSignals: string[],
-    competitorMentions: string[],
-    nextBestAction: string,
-    confidence: number
-}
-
-export interface ConversationTranscriptMessage {
-    role: | "user" | "assistant";
-    content: string;
-    createdAt?: Date
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 }
 
 export interface ConversationTranscript {
     conversationId: string;
     productId: string;
     messages: ConversationTranscriptMessage[];
-<<<<<<< HEAD
     text: string;
 }
-=======
-    text: string
-}
-
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a

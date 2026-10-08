@@ -1,11 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-<<<<<<< HEAD
 import { useCreateCampaign, useGenerateAICampaign } from "../hooks/useCampaigns";
 import { useUploadSurvey } from "../../surveys/hooks/useSurveys";
-=======
-import { useCreateCampaign } from "../hooks/useCampaigns";
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 import { CampaignType } from "../../../types";
 import {
   ArrowLeft,
@@ -18,21 +14,17 @@ import {
   Users,
   CheckCircle2,
   AlertCircle,
-<<<<<<< HEAD
   PhoneCall,
   Loader2,
   Wand2,
   UploadCloud,
   FileText,
   Play,
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 } from "lucide-react";
 
 export const CreateCampaignPage: React.FC = () => {
   const navigate = useNavigate();
   const createMutation = useCreateCampaign();
-<<<<<<< HEAD
   const aiGenerateMutation = useGenerateAICampaign();
   const uploadSurveyMutation = useUploadSurvey();
 
@@ -48,22 +40,14 @@ export const CreateCampaignPage: React.FC = () => {
   const [aiAudience, setAiAudience] = useState("");
   const [aiAction, setAiAction] = useState("CALL");
   const [aiCreateSurvey, setAiCreateSurvey] = useState(true);
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
   // Form State
   const [formData, setFormData] = useState({
     name: "",
-<<<<<<< HEAD
     businessName: "AI Sales Enterprise Suite",
     product: "SalesFlow AI Platform",
     type: CampaignType.SALES,
     action: "CALL",
-=======
-    businessName: "Procter & Gamble Consumer Insights",
-    product: "",
-    type: CampaignType.PRODUCT_RESEARCH,
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     description: "",
     startDate: new Date().toISOString().split("T")[0],
     endDate: "",
@@ -107,10 +91,7 @@ export const CreateCampaignPage: React.FC = () => {
     name: string;
     product: string;
     type: CampaignType;
-<<<<<<< HEAD
     action?: string;
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     description: string;
     targetAudience: string;
     language: string;
@@ -118,15 +99,11 @@ export const CreateCampaignPage: React.FC = () => {
     setFormData({
       ...formData,
       ...preset,
-<<<<<<< HEAD
       action: preset.action || "CALL",
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     });
     setErrors({});
   };
 
-<<<<<<< HEAD
   const handleAiGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!aiGoal.trim()) return;
@@ -147,8 +124,6 @@ export const CreateCampaignPage: React.FC = () => {
     }
   };
 
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -160,10 +135,7 @@ export const CreateCampaignPage: React.FC = () => {
         businessName: formData.businessName,
         product: formData.product.trim(),
         type: formData.type,
-<<<<<<< HEAD
         action: formData.action as any,
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         description: formData.description.trim(),
         startDate: formData.startDate,
         endDate: formData.endDate || undefined,
@@ -171,7 +143,6 @@ export const CreateCampaignPage: React.FC = () => {
         language: formData.language,
       });
 
-<<<<<<< HEAD
       let linkedSurveyId: string | undefined = created.surveyId?.toString();
 
       if ((surveyOption === "file" && surveyFile) || (surveyOption === "text" && surveyText.trim())) {
@@ -196,9 +167,6 @@ export const CreateCampaignPage: React.FC = () => {
         surveyId: linkedSurveyId,
         name: created.name,
       });
-=======
-      navigate(`/campaigns/${created._id}`);
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     } catch (err: any) {
       setApiError(err.message || "Failed to create campaign.");
     }
@@ -207,7 +175,6 @@ export const CreateCampaignPage: React.FC = () => {
   return (
     <div className="container-fluid px-0" style={{ maxWidth: "880px" }}>
       {/* Back link & Header */}
-<<<<<<< HEAD
       <div className="d-flex align-items-center justify-content-between mb-3">
         <div className="d-flex align-items-center gap-2">
           <Link to="/campaigns" className="btn btn-outline-secondary btn-sm p-1">
@@ -250,17 +217,6 @@ export const CreateCampaignPage: React.FC = () => {
           >
             Create with AI
           </button>
-=======
-      <div className="d-flex align-items-center gap-2 mb-3">
-        <Link to="/campaigns" className="btn btn-outline-secondary btn-sm p-1">
-          <ArrowLeft size={16} />
-        </Link>
-        <div>
-          <h1 className="h4 fw-bold mb-0">Create New Campaign</h1>
-          <p className="text-secondary small mb-0">
-            Define campaign targeting, language, and audience parameters before configuring the survey.
-          </p>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         </div>
       </div>
 
@@ -275,7 +231,6 @@ export const CreateCampaignPage: React.FC = () => {
           <div className="row g-2">
             <div className="col-12 col-md-4">
               <div
-<<<<<<< HEAD
                 className="p-3 border rounded-3 bg-light-subtle hover-shadow h-100"
                 style={{ cursor: "pointer" }}
                 onClick={() =>
@@ -330,72 +285,13 @@ export const CreateCampaignPage: React.FC = () => {
                     action: "CALL",
                     description: "Voice outreach exploring competitor switching intent (Gong, Chorus, Outreach) and budget appetite.",
                     targetAudience: "Sales Directors evaluating conversation AI tools",
-=======
-                className="p-3 border rounded-3 bg-light-subtle hover-shadow"
-                style={{ cursor: "pointer" }}
-                onClick={() =>
-                  applyPreset({
-                    name: "Guard Razor Consumer Study",
-                    product: "Gillette Guard",
-                    type: CampaignType.PRODUCT_RESEARCH,
-                    description: "Voice AI consumer research on Gillette Guard purchasing behavior, repeat intent, and shaving habits.",
-                    targetAudience: "Male consumers age 18-45 in tier 2/3 cities",
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                     language: "en-IN",
                   })
                 }
               >
-<<<<<<< HEAD
                 <span className="badge bg-purple-subtle text-purple border mb-1">🔍 Market Research</span>
                 <div className="fw-bold small text-dark">Competitor Benchmark</div>
                 <div className="text-muted small" style={{ fontSize: "11px" }}>Pricing evaluation • Feature gaps</div>
-=======
-                <span className="badge bg-primary-subtle text-primary border mb-1">Gillette Guard Study</span>
-                <div className="fw-bold small text-dark">Consumer Habit Poll</div>
-                <div className="text-muted small" style={{ fontSize: "11px" }}>5 Questions • Repeat Purchase</div>
-              </div>
-            </div>
-
-            <div className="col-12 col-md-4">
-              <div
-                className="p-3 border rounded-3 bg-light-subtle hover-shadow"
-                style={{ cursor: "pointer" }}
-                onClick={() =>
-                  applyPreset({
-                    name: "B2B SaaS Sales Discovery & Qualifier",
-                    product: "Voice CRM Suite",
-                    type: CampaignType.SALES,
-                    description: "Automated discovery survey asking team size, CRM software, and budget timeline.",
-                    targetAudience: "VPs of Sales and Revenue Operations",
-                    language: "en-US",
-                  })
-                }
-              >
-                <span className="badge bg-success-subtle text-success border mb-1">B2B Inbound Qualifier</span>
-                <div className="fw-bold small text-dark">Enterprise Sales Discovery</div>
-                <div className="text-muted small" style={{ fontSize: "11px" }}>Lead qualification & Budget</div>
-              </div>
-            </div>
-
-            <div className="col-12 col-md-4">
-              <div
-                className="p-3 border rounded-3 bg-light-subtle hover-shadow"
-                style={{ cursor: "pointer" }}
-                onClick={() =>
-                  applyPreset({
-                    name: "Customer Onboarding & CSAT Health Check",
-                    product: "Platform Core",
-                    type: CampaignType.CUSTOMER_RETENTION,
-                    description: "14-day proactive outreach gauging user onboarding satisfaction and friction points.",
-                    targetAudience: "Newly onboarded workspace accounts",
-                    language: "en-US",
-                  })
-                }
-              >
-                <span className="badge bg-purple-subtle text-purple border mb-1">CSAT & Retention</span>
-                <div className="fw-bold small text-dark">Onboarding Health Poll</div>
-                <div className="text-muted small" style={{ fontSize: "11px" }}>Satisfaction Rating & Feedback</div>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
               </div>
             </div>
           </div>
@@ -412,7 +308,6 @@ export const CreateCampaignPage: React.FC = () => {
             </div>
           )}
 
-<<<<<<< HEAD
           <form onSubmit={handleSubmit} noValidate>
             {/* Campaign Name */}
             <div className="mb-3">
@@ -520,133 +415,11 @@ export const CreateCampaignPage: React.FC = () => {
                 <input
                   type="date"
                   className="form-control"
-=======
-          <form onSubmit={handleSubmit}>
-            <div className="row g-3">
-              {/* Campaign Name */}
-              <div className="col-12">
-                <label className="form-label small fw-bold">
-                  Campaign Name <span className="text-danger">*</span>
-                </label>
-                <input
-                  type="text"
-                  className={`form-control ${errors.name ? "is-invalid" : ""}`}
-                  placeholder="e.g. Guard Razor Consumer Study"
-                  value={formData.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
-                />
-                {errors.name && <div className="invalid-feedback small">{errors.name}</div>}
-              </div>
-
-              {/* Business Name & Product */}
-              <div className="col-12 col-md-6">
-                <label className="form-label small fw-bold">Business Unit</label>
-                <div className="input-group input-group-sm">
-                  <span className="input-group-text bg-light">
-                    <Building size={14} />
-                  </span>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.businessName}
-                    onChange={(e) => handleChange("businessName", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="col-12 col-md-6">
-                <label className="form-label small fw-bold">
-                  Target Product / Service <span className="text-danger">*</span>
-                </label>
-                <div className="input-group input-group-sm">
-                  <span className="input-group-text bg-light">
-                    <Package size={14} />
-                  </span>
-                  <input
-                    type="text"
-                    className={`form-control ${errors.product ? "is-invalid" : ""}`}
-                    placeholder="e.g. Gillette Guard"
-                    value={formData.product}
-                    onChange={(e) => handleChange("product", e.target.value)}
-                  />
-                </div>
-                {errors.product && <div className="text-danger small mt-1">{errors.product}</div>}
-              </div>
-
-              {/* Campaign Type & Language */}
-              <div className="col-12 col-md-6">
-                <label className="form-label small fw-bold">Campaign Type</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={formData.type}
-                  onChange={(e) => handleChange("type", e.target.value)}
-                >
-                  <option value={CampaignType.PRODUCT_RESEARCH}>Product & Consumer Research</option>
-                  <option value={CampaignType.SALES}>Sales Qualification</option>
-                  <option value={CampaignType.CUSTOMER_RETENTION}>Customer Retention & CSAT</option>
-                  <option value={CampaignType.FEEDBACK}>General Feedback</option>
-                  <option value={CampaignType.SURVEY}>General Survey</option>
-                </select>
-              </div>
-
-              <div className="col-12 col-md-6">
-                <label className="form-label small fw-bold">Primary Speech / Text Language</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={formData.language}
-                  onChange={(e) => handleChange("language", e.target.value)}
-                >
-                  <option value="en-IN">English (India) [en-IN]</option>
-                  <option value="en-US">English (US) [en-US]</option>
-                  <option value="en-GB">English (UK) [en-GB]</option>
-                  <option value="hi-IN">Hindi (India) [hi-IN]</option>
-                  <option value="es-ES">Spanish [es-ES]</option>
-                  <option value="fr-FR">French [fr-FR]</option>
-                </select>
-              </div>
-
-              {/* Description */}
-              <div className="col-12">
-                <label className="form-label small fw-bold">Campaign Description & Purpose</label>
-                <textarea
-                  className="form-control"
-                  rows={3}
-                  placeholder="Describe the research goals or sales targets for this campaign..."
-                  value={formData.description}
-                  onChange={(e) => handleChange("description", e.target.value)}
-                />
-              </div>
-
-              {/* Target Audience */}
-              <div className="col-12">
-                <label className="form-label small fw-bold">Target Audience Criteria</label>
-                <div className="input-group input-group-sm">
-                  <span className="input-group-text bg-light">
-                    <Users size={14} />
-                  </span>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="e.g. Male consumers age 18-45 in tier 2/3 cities"
-                    value={formData.targetAudience}
-                    onChange={(e) => handleChange("targetAudience", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Dates */}
-              <div className="col-12 col-md-6">
-                <label className="form-label small fw-bold">Start Date</label>
-                <input
-                  type="date"
-                  className="form-control form-control-sm"
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                   value={formData.startDate}
                   onChange={(e) => handleChange("startDate", e.target.value)}
                 />
               </div>
 
-<<<<<<< HEAD
               <div className="col-md-4">
                 <label className="form-label fw-semibold small d-flex align-items-center gap-1">
                   <Calendar size={14} className="text-muted" />
@@ -655,18 +428,10 @@ export const CreateCampaignPage: React.FC = () => {
                 <input
                   type="date"
                   className="form-control"
-=======
-              <div className="col-12 col-md-6">
-                <label className="form-label small fw-bold">End Date (Optional)</label>
-                <input
-                  type="date"
-                  className="form-control form-control-sm"
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                   value={formData.endDate}
                   onChange={(e) => handleChange("endDate", e.target.value)}
                 />
               </div>
-<<<<<<< HEAD
 
               <div className="col-md-4">
                 <label className="form-label fw-semibold small d-flex align-items-center gap-1">
@@ -767,42 +532,22 @@ A. Surf, B. Ariel, C. Tide, D. Others`}
             {/* Buttons */}
             <div className="d-flex justify-content-end gap-2 pt-3 border-top">
               <Link to="/campaigns" className="btn btn-outline-secondary">
-=======
-            </div>
-
-            {/* Actions */}
-            <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-              <Link to="/campaigns" className="btn btn-outline-secondary btn-sm px-3">
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                 Cancel
               </Link>
               <button
                 type="submit"
-<<<<<<< HEAD
                 className="btn btn-primary d-flex align-items-center gap-2"
-=======
-                className="btn btn-primary btn-sm px-4 d-flex align-items-center gap-2"
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                 disabled={createMutation.isPending}
               >
                 {createMutation.isPending ? (
                   <>
-<<<<<<< HEAD
                     <Loader2 size={16} className="spinner-border spinner-border-sm" />
                     <span>Saving...</span>
-=======
-                    <span className="spinner-border spinner-border-sm"></span>
-                    <span>Creating Campaign...</span>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                   </>
                 ) : (
                   <>
                     <CheckCircle2 size={16} />
-<<<<<<< HEAD
                     <span>Create Campaign</span>
-=======
-                    <span>Create & Open Campaign</span>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                   </>
                 )}
               </button>
@@ -810,7 +555,6 @@ A. Surf, B. Ariel, C. Tide, D. Others`}
           </form>
         </div>
       </div>
-<<<<<<< HEAD
 
       {/* AI Generate Campaign Modal */}
       {showAiModal && (
@@ -969,8 +713,3 @@ A. Surf, B. Ariel, C. Tide, D. Others`}
 };
 
 export default CreateCampaignPage;
-=======
-    </div>
-  );
-};
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a

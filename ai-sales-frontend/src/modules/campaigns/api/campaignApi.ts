@@ -6,21 +6,12 @@ export const campaignApi = {
   // GET all campaigns
   async getCampaigns(filters?: { status?: string; type?: string; search?: string }): Promise<ICampaign[]> {
     try {
-<<<<<<< HEAD
       const res = await axiosInstance.get("/api/campaigns");
       if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
         return res.data.data;
       }
     } catch (err) {
       console.warn("Backend campaigns fetch error:", err);
-=======
-      const res = await axiosInstance.get("/api/campaigns/business/biz-pg-01");
-      if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
-        return res.data.data;
-      }
-    } catch {
-      // Graceful fallback to mock store
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     }
 
     let list = mockStore.getCampaigns();
@@ -189,7 +180,6 @@ export const campaignApi = {
     }
     return this.updateCampaign(campaignId, { surveyId });
   },
-<<<<<<< HEAD
 
   // AI GENERATE campaign
   async generateAICampaign(payload: {
@@ -260,6 +250,4 @@ export const campaignApi = {
     );
     return res.data?.data;
   },
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 };

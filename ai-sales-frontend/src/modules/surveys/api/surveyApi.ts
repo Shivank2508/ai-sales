@@ -11,7 +11,6 @@ import {
 } from "../../../types";
 
 export const surveyApi = {
-<<<<<<< HEAD
   // GET all surveys (optionally filtered by campaignId)
   async getAllSurveys(campaignId?: string): Promise<ISurvey[]> {
     try {
@@ -32,8 +31,6 @@ export const surveyApi = {
   },
 
 
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
   // GET survey by ID
   async getSurveyById(surveyId: string): Promise<ISurvey> {
     try {
@@ -56,7 +53,6 @@ export const surveyApi = {
   // GET survey by Campaign ID
   async getSurveyByCampaignId(campaignId: string): Promise<ISurvey | null> {
     try {
-<<<<<<< HEAD
       const res = await axiosInstance.get(`/api/surveys/campaign/${campaignId}`);
       if (res.data?.data) {
         return res.data.data;
@@ -66,8 +62,6 @@ export const surveyApi = {
     }
 
     try {
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
       const surveys = mockStore.getSurveys();
       const found = Object.values(surveys).find((s) => s.campaignId === campaignId);
       return found || null;
@@ -97,7 +91,6 @@ export const surveyApi = {
     };
 
     try {
-<<<<<<< HEAD
       const res = await axiosInstance.post("/api/surveys", {
         ...newSurvey,
         ...payload,
@@ -108,14 +101,6 @@ export const surveyApi = {
       }
     } catch (err) {
       console.warn("Backend createSurvey error:", err);
-=======
-      const res = await axiosInstance.post("/api/surveys", newSurvey);
-      if (res.data?.data) {
-        return res.data.data;
-      }
-    } catch {
-      // Fallback
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     }
 
     const surveys = mockStore.getSurveys();
@@ -131,13 +116,8 @@ export const surveyApi = {
       if (res.data?.data) {
         return res.data.data;
       }
-<<<<<<< HEAD
     } catch (err) {
       console.warn("Backend updateSurvey error:", err);
-=======
-    } catch {
-      // Fallback
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     }
 
     const surveys = mockStore.getSurveys();
@@ -156,7 +136,6 @@ export const surveyApi = {
   // SAVE ALL QUESTIONS
   async saveQuestions(surveyId: string, questions: ISurveyQuestion[]): Promise<ISurvey> {
     const reordered = questions.map((q, idx) => ({ ...q, order: idx + 1 }));
-<<<<<<< HEAD
     try {
       const res = await axiosInstance.post(`/api/surveys/${surveyId}/questions/bulk`, {
         questions: reordered,
@@ -167,8 +146,6 @@ export const surveyApi = {
     } catch (err) {
       console.warn("Backend saveQuestions error:", err);
     }
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     return this.updateSurvey(surveyId, { questions: reordered });
   },
 
@@ -334,7 +311,6 @@ export const surveyApi = {
       passedChecks,
     };
   },
-<<<<<<< HEAD
 
   // AI GENERATE survey
   async generateAISurvey(payload: {
@@ -413,6 +389,4 @@ export const surveyApi = {
     const res = await axiosInstance.post("/api/voice/synthesize", { text });
     return res.data?.data;
   },
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 };

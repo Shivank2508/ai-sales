@@ -1,10 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useCampaigns } from "../../modules/campaigns/hooks/useCampaigns";
-<<<<<<< HEAD
 import { useDashboardMetrics, useBusinessInsights, useGenerateInsights } from "../../modules/analytics/hooks/useAnalytics";
-=======
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 import { StatCard } from "../../components/common/StatCard";
 import { StatusBadge, CampaignTypeBadge } from "../../components/common/StatusBadge";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner";
@@ -16,7 +13,6 @@ import {
   Clock,
   Plus,
   ArrowRight,
-<<<<<<< HEAD
   Sparkles,
   Bot,
   MessageSquare,
@@ -53,22 +49,6 @@ export const DashboardPage: React.FC = () => {
   const insightsList = Array.isArray(insightsData)
     ? insightsData
     : (insightsData?.all || insightsData?.opportunities || []);
-=======
-  Workflow,
-  Sparkles,
-  Bot,
-  Layers,
-} from "lucide-react";
-
-export const DashboardPage: React.FC = () => {
-  const { data: campaigns, isLoading } = useCampaigns();
-
-  if (isLoading) return <LoadingSpinner message="Loading dashboard..." />;
-
-  const totalCampaigns = campaigns?.length || 0;
-  const activeCampaigns = campaigns?.filter((c) => c.status === "active").length || 0;
-  const totalResponses = campaigns?.reduce((acc, c) => acc + (c.responsesCount || 0), 0) || 0;
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
   return (
     <div className="d-flex flex-column gap-4">
@@ -76,22 +56,14 @@ export const DashboardPage: React.FC = () => {
       <div className="card shadow-sm border bg-primary text-white p-4 overflow-hidden position-relative">
         <div className="row align-items-center">
           <div className="col-12 col-md-8">
-<<<<<<< HEAD
             <span className="badge bg-white text-primary border mb-2">AI Sales Platform</span>
             <h1 className="h3 fw-bold mb-2">Campaign Outreach & Survey Intelligence</h1>
             <p className="text-white-50 small mb-3" style={{ maxWidth: "560px" }}>
               1. Create Campaign → 2. Build or Upload Survey → 3. AI Voice Calling Outreach with Knowledge Base Q&A.
-=======
-            <span className="badge bg-white text-primary border mb-2">AI Sales Intelligence Platform</span>
-            <h1 className="h3 fw-bold mb-2">Welcome to AgentFlow Enterprise</h1>
-            <p className="text-white-50 small mb-3" style={{ maxWidth: "560px" }}>
-              Design conversational surveys, configure complex branching conditions, and execute autonomous voice AI research campaigns.
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
             </p>
             <div className="d-flex gap-2">
               <Link to="/campaigns/create" className="btn btn-light text-primary btn-sm fw-bold px-3">
                 <Plus size={15} className="me-1" />
-<<<<<<< HEAD
                 <span>1. Make Campaign</span>
               </Link>
               <Link to="/surveys" className="btn btn-outline-light btn-sm px-3">
@@ -101,19 +73,12 @@ export const DashboardPage: React.FC = () => {
               <Link to="/campaigns" className="btn btn-success text-white btn-sm fw-bold px-3">
                 <PhoneCall size={15} className="me-1" />
                 <span>3. Run AI Calling</span>
-=======
-                <span>Create Campaign</span>
-              </Link>
-              <Link to="/ai-agents" className="btn btn-outline-light btn-sm px-3">
-                <span>View AI Agents</span>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
               </Link>
             </div>
           </div>
         </div>
       </div>
 
-<<<<<<< HEAD
       {/* 3-Step Direct Workflow Cards */}
       <div className="row g-3">
         <div className="col-12 col-md-4">
@@ -314,56 +279,12 @@ export const DashboardPage: React.FC = () => {
             </div>
           )}
         </div>
-=======
-      {/* Top 4 KPI Stat Cards */}
-      <div className="row g-3">
-        <div className="col-6 col-md-3">
-          <StatCard
-            title="Total Campaigns"
-            value={totalCampaigns}
-            subtitle={`${activeCampaigns} active now`}
-            icon={Megaphone}
-            variant="primary"
-          />
-        </div>
-        <div className="col-6 col-md-3">
-          <StatCard
-            title="Consumer Responses"
-            value={totalResponses}
-            subtitle="Captured via Voice & Web"
-            icon={Users}
-            variant="success"
-          />
-        </div>
-        <div className="col-6 col-md-3">
-          <StatCard
-            title="Avg Completion"
-            value="89%"
-            subtitle="Branching optimized"
-            icon={TrendingUp}
-            variant="purple"
-          />
-        </div>
-        <div className="col-6 col-md-3">
-          <StatCard
-            title="Active AI Agents"
-            value="2"
-            subtitle="Voice & text ready"
-            icon={Bot}
-            variant="info"
-          />
-        </div>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
       </div>
 
       {/* Recent Campaigns Card */}
       <div className="card shadow-sm border">
         <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-<<<<<<< HEAD
           <span className="fw-bold fs-6 text-dark">Active Campaigns & Research Flows</span>
-=======
-          <span className="fw-bold fs-6 text-dark">Active Research & Sales Campaigns</span>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
           <Link to="/campaigns" className="btn btn-outline-primary btn-sm">
             View All Campaigns →
           </Link>
@@ -377,11 +298,7 @@ export const DashboardPage: React.FC = () => {
                   <th>Product</th>
                   <th>Type</th>
                   <th>Status</th>
-<<<<<<< HEAD
                   <th>Audience / Progress</th>
-=======
-                  <th>Responses</th>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                   <th className="text-end pe-3">Action</th>
                 </tr>
               </thead>
@@ -397,15 +314,10 @@ export const DashboardPage: React.FC = () => {
                       <StatusBadge status={c.status} />
                     </td>
                     <td>
-<<<<<<< HEAD
                       <strong>{c.stats?.contactedLeads || c.responsesCount || 0}</strong>
                       <span className="text-muted ms-1 small">
                         / {c.stats?.totalLeads || 1} leads ({c.stats?.responseRate || 0}%)
                       </span>
-=======
-                      <strong>{c.responsesCount || 0}</strong>
-                      <span className="text-muted ms-1 small">responses</span>
->>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                     </td>
                     <td className="text-end pe-3">
                       <Link to={`/campaigns/${c._id}`} className="btn btn-outline-secondary btn-sm p-1">
