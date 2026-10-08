@@ -98,7 +98,13 @@ export class TwilioService {
         if (!this.client) return [];
         try {
             const calls = await this.client.calls.list({ limit: 5 });
-            return Promise.all(
+            let accountNotifs: any[] = [];
+            try {
+                accountNotifs = await this.client.notifications.list({ limit: 10 });
+            } catch (err: any) {
+                console.warn("[TwilioService] Could not list account notifications:", err.message);
+            }
+            const callDetails = await Promise.all(
                 calls.map(async (c) => {
                     const notifs = await this.client!.calls(c.sid).notifications.list();
                     return {
@@ -114,6 +120,17 @@ export class TwilioService {
                     };
                 })
             );
+            return {
+                calls: callDetails,
+                accountAlerts: accountNotifs.map((n) => ({
+                    callSid: n.callSid,
+                    errorCode: n.errorCode,
+                    messageText: n.messageText,
+                    requestUrl: n.requestUrl,
+                    responseBody: n.responseBody,
+                    messageDate: n.messageDate,
+                })),
+            };
         } catch (e: any) {
             return { error: e.message };
         }
