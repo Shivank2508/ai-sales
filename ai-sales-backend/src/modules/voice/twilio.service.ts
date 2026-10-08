@@ -51,6 +51,7 @@ export class TwilioService {
      */
     getStatus() {
         return {
+            version: "v2.2-bulletproof",
             configured: this.isConfigured(),
             hasAccountSid: Boolean(this.accountSid),
             hasAuthToken: Boolean(this.authToken),
@@ -86,13 +87,59 @@ export class TwilioService {
     }
 
     private createVoiceResponse(): any {
-        const tw = require("twilio");
-        const VoiceResponseClass =
-            tw.twiml?.VoiceResponse ||
-            tw.default?.twiml?.VoiceResponse ||
-            (twilio as any)?.twiml?.VoiceResponse ||
-            (twilio as any)?.default?.twiml?.VoiceResponse;
-        return new VoiceResponseClass();
+        try {
+            const VoiceResponse = require("twilio/lib/twiml/VoiceResponse");
+            if (typeof VoiceResponse === "function") {
+                return new VoiceResponse();
+            }
+        } catch {}
+        try {
+            const tw = require("twilio");
+            const VR = tw?.twiml?.VoiceResponse || tw?.default?.twiml?.VoiceResponse;
+            if (typeof VR === "function") {
+                return new VR();
+            }
+        } catch {}
+
+        // 100% resilient fallback XML generator conforming to Twilio TwiML
+        const parts: string[] = [];
+        const escapeXml = (str: string) =>
+            (str || "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&apos;");
+
+        return {
+            gather: (opts: any) => {
+                const actionStr = opts.action ? ` action="${escapeXml(opts.action)}"` : "";
+                const methodStr = opts.method ? ` method="${opts.method}"` : ' method="POST"';
+                const timeoutStr = opts.speechTimeout ? ` speechTimeout="${opts.speechTimeout}"` : "";
+                const langStr = opts.language ? ` language="${opts.language}"` : ' language="en-US"';
+                const gatherBody: string[] = [];
+
+                return {
+                    say: (sayOpts: any, text?: string) => {
+                        const content = typeof sayOpts === "string" ? sayOpts : text || "";
+                        const voice = typeof sayOpts === "object" && sayOpts?.voice ? ` voice="${sayOpts.voice}"` : ' voice="Polly.Joanna"';
+                        const lang = typeof sayOpts === "object" && sayOpts?.language ? ` language="${sayOpts.language}"` : ' language="en-US"';
+                        gatherBody.push(`<Say${voice}${lang}>${escapeXml(content)}</Say>`);
+                        parts.push(`<Gather input="speech"${actionStr}${methodStr}${timeoutStr}${langStr}>${gatherBody.join("")}</Gather>`);
+                    },
+                };
+            },
+            say: (opts: any, text?: string) => {
+                const content = typeof opts === "string" ? opts : text || "";
+                const voice = typeof opts === "object" && opts?.voice ? ` voice="${opts.voice}"` : ' voice="Polly.Joanna"';
+                const lang = typeof opts === "object" && opts?.language ? ` language="${opts.language}"` : ' language="en-US"';
+                parts.push(`<Say${voice}${lang}>${escapeXml(content)}</Say>`);
+            },
+            hangup: () => {
+                parts.push("<Hangup/>");
+            },
+            toString: () => `<?xml version="1.0" encoding="UTF-8"?><Response>${parts.join("")}</Response>`,
+        };
     }
 
     /**

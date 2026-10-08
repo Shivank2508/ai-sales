@@ -64,6 +64,33 @@ export class TwilioController {
     };
 
     /**
+     * GET /api/voice/twilio/debug
+     */
+    debug = async (req: Request, res: Response) => {
+        try {
+            const queryParams = {
+                campaignId: String(req.query.campaignId || ""),
+                leadId: String(req.query.leadId || ""),
+                conversationId: String(req.query.conversationId || ""),
+                surveySessionId: String(req.query.surveySessionId || ""),
+            };
+            const twiml = await this.twilioService.handleVoiceWebhook(queryParams);
+            return res.json({
+                success: true,
+                version: "v2.2-bulletproof",
+                twiml,
+            });
+        } catch (error: any) {
+            return res.status(500).json({
+                success: false,
+                version: "v2.2-bulletproof",
+                error: error.message,
+                stack: error.stack,
+            });
+        }
+    };
+
+    /**
      * POST|GET /api/voice/twilio/voice-webhook
      */
     voiceWebhook = async (req: Request, res: Response) => {
@@ -81,8 +108,12 @@ export class TwilioController {
         } catch (error: any) {
             console.error("[TwilioController] voiceWebhook error:", error);
             res.type("text/xml");
+            const safeMsg = (error.message || "An error occurred connecting your call.")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
             return res.send(
-                `<?xml version="1.0" encoding="UTF-8"?><Response><Say>An error occurred connecting your call. Please try again later. Goodbye.</Say><Hangup/></Response>`
+                `<?xml version="1.0" encoding="UTF-8"?><Response><Say>${safeMsg}</Say><Hangup/></Response>`
             );
         }
     };

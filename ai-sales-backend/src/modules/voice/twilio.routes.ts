@@ -5,6 +5,7 @@ const router = Router();
 const controller = new TwilioController();
 
 router.get("/status", controller.getStatus);
+router.get("/debug", controller.debug);
 router.post("/call", controller.initiateCall);
 
 // Webhook endpoints consumed by Twilio
