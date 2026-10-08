@@ -239,18 +239,23 @@ export class TwilioService {
                 const aiResult = await this.aiCampaignService.callLeadWithAI(campaignId, leadId, {
                     conversationId: convId,
                     surveySessionId: sessId,
+                    skipTTS: true,
                 });
 
-                if (aiResult?.aiSpeech) {
+                if (aiResult?.openingSpeech) {
+                    initialSpeech = aiResult.openingSpeech;
+                } else if (aiResult?.aiSpeech) {
                     initialSpeech = aiResult.aiSpeech;
+                } else if (aiResult?.text) {
+                    initialSpeech = aiResult.text;
                 } else if (aiResult?.script) {
                     initialSpeech = aiResult.script;
                 } else if (aiResult?.currentQuestion?.text) {
                     initialSpeech = aiResult.currentQuestion.text;
                 }
 
-                convId = aiResult.conversationId || convId;
-                sessId = aiResult.surveySessionId || sessId;
+                convId = aiResult?.conversationId || convId;
+                sessId = aiResult?.surveySessionId || sessId;
             } catch (err: any) {
                 console.warn("[TwilioService] Error fetching AI opening script:", err.message);
             }
@@ -343,12 +348,13 @@ export class TwilioService {
                     customerReply: speechResult.trim(),
                     conversationId: convId,
                     surveySessionId: sessId,
+                    skipTTS: true,
                 });
 
-                aiSpeech = aiResult.aiSpeech || aiResult.message || aiSpeech;
-                isCompleted = Boolean(aiResult.isCompleted);
-                convId = aiResult.conversationId || convId;
-                sessId = aiResult.surveySessionId || sessId;
+                aiSpeech = aiResult?.aiSpeech || aiResult?.text || aiResult?.message || aiSpeech;
+                isCompleted = Boolean(aiResult?.completed || aiResult?.isCompleted);
+                convId = aiResult?.conversationId || convId;
+                sessId = aiResult?.surveySessionId || sessId;
             } catch (err: any) {
                 console.error("[TwilioService] Error processing voice turn with AI:", err);
                 aiSpeech = "Thank you for your answer. We have recorded your response.";

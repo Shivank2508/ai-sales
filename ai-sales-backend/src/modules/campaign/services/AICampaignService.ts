@@ -261,6 +261,7 @@ Return JSON matching this schema:
             conversationId?: string;
             surveySessionId?: string;
             surveyId?: string;
+            skipTTS?: boolean;
         } = {}
     ): Promise<any> {
         const campaign: any = await CampaignModel.findById(campaignId);
@@ -546,10 +547,12 @@ Return JSON matching this schema:
 
         // 4. Synthesize speech via TTS (with safe fallback for network resilience)
         let audio: any = { audioBase64: "", mimeType: "audio/wav" };
-        try {
-            audio = await this.ttsService.synthesize(speechText);
-        } catch (ttsErr: any) {
-            console.warn("[callLeadWithAI] TTS synthesis skipped or failed:", ttsErr?.message || ttsErr);
+        if (!options.skipTTS) {
+            try {
+                audio = await this.ttsService.synthesize(speechText);
+            } catch (ttsErr: any) {
+                console.warn("[callLeadWithAI] TTS synthesis skipped or failed:", ttsErr?.message || ttsErr);
+            }
         }
 
         // 5. Update lead campaign status
