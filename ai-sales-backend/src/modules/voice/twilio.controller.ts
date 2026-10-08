@@ -53,7 +53,13 @@ export class TwilioController {
                 data: result,
             });
         } catch (error: any) {
-            next(error);
+            console.error("[TwilioController] initiateCall error:", error);
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Twilio call failed",
+                code: error.code,
+                moreInfo: error.moreInfo,
+            });
         }
     };
 

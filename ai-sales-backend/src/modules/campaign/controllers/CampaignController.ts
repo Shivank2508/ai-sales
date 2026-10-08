@@ -318,8 +318,14 @@ export class CampaignController {
                 message: result.message,
                 data: result,
             });
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            console.error("[CampaignController] callLeadTwilio error:", error);
+            return res.status(error.status || 500).json({
+                success: false,
+                message: error.message || "Twilio call failed",
+                code: error.code,
+                moreInfo: error.moreInfo,
+            });
         }
     };
 

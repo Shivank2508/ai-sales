@@ -134,12 +134,21 @@ export class TwilioService {
             console.log(`[TwilioService] Call created: ${call.sid} to ${normalizedTo}`);
 
             // Update lead status to IN_PROGRESS / CONTACTED
-            if (campaignId && leadId) {
-                await this.campaignLeadRepo.upsertLeadExecution(campaignId, leadId, {
-                    status: CampaignLeadStatus.IN_PROGRESS,
-                    lastContactedAt: new Date(),
-                    metadata: { twilioCallSid: call.sid, to: normalizedTo },
-                });
+            if (
+                campaignId &&
+                leadId &&
+                mongoose.Types.ObjectId.isValid(campaignId) &&
+                mongoose.Types.ObjectId.isValid(leadId)
+            ) {
+                try {
+                    await this.campaignLeadRepo.upsertLeadExecution(campaignId, leadId, {
+                        status: CampaignLeadStatus.IN_PROGRESS,
+                        lastContactedAt: new Date(),
+                        metadata: { twilioCallSid: call.sid, to: normalizedTo },
+                    });
+                } catch (dbErr: any) {
+                    console.warn("[TwilioService] Could not record lead execution in DB:", dbErr.message);
+                }
             }
 
             return {
