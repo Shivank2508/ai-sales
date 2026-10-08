@@ -96,10 +96,10 @@ export class TwilioController {
     voiceWebhook = async (req: Request, res: Response) => {
         try {
             const queryParams = {
-                campaignId: String(req.query.campaignId || req.body.campaignId || ""),
-                leadId: String(req.query.leadId || req.body.leadId || ""),
-                conversationId: String(req.query.conversationId || req.body.conversationId || ""),
-                surveySessionId: String(req.query.surveySessionId || req.body.surveySessionId || ""),
+                campaignId: String(req.query.campaignId || req.body?.campaignId || ""),
+                leadId: String(req.query.leadId || req.body?.leadId || ""),
+                conversationId: String(req.query.conversationId || req.body?.conversationId || ""),
+                surveySessionId: String(req.query.surveySessionId || req.body?.surveySessionId || ""),
             };
 
             const twiml = await this.twilioService.handleVoiceWebhook(queryParams);
@@ -124,13 +124,13 @@ export class TwilioController {
     gatherWebhook = async (req: Request, res: Response) => {
         try {
             const queryParams = {
-                campaignId: String(req.query.campaignId || req.body.campaignId || ""),
-                leadId: String(req.query.leadId || req.body.leadId || ""),
-                conversationId: String(req.query.conversationId || req.body.conversationId || ""),
-                surveySessionId: String(req.query.surveySessionId || req.body.surveySessionId || ""),
+                campaignId: String(req.query.campaignId || req.body?.campaignId || ""),
+                leadId: String(req.query.leadId || req.body?.leadId || ""),
+                conversationId: String(req.query.conversationId || req.body?.conversationId || ""),
+                surveySessionId: String(req.query.surveySessionId || req.body?.surveySessionId || ""),
             };
 
-            const twiml = await this.twilioService.handleGatherWebhook(req.body, queryParams);
+            const twiml = await this.twilioService.handleGatherWebhook(req.body || {}, queryParams);
             res.type("text/xml");
             return res.send(twiml);
         } catch (error: any) {
@@ -148,11 +148,11 @@ export class TwilioController {
     statusCallback = async (req: Request, res: Response) => {
         try {
             const queryParams = {
-                campaignId: String(req.query.campaignId || ""),
-                leadId: String(req.query.leadId || ""),
+                campaignId: String(req.query.campaignId || req.body?.campaignId || ""),
+                leadId: String(req.query.leadId || req.body?.leadId || ""),
             };
 
-            await this.twilioService.handleStatusCallback(req.body, queryParams);
+            await this.twilioService.handleStatusCallback(req.body || {}, queryParams);
             return res.sendStatus(200);
         } catch (error: any) {
             console.error("[TwilioController] statusCallback error:", error);
