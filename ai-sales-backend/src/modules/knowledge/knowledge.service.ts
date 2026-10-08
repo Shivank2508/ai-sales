@@ -22,35 +22,29 @@ export class KnowledgeService {
     async createKnowledge(
         input: CreateKnowledgeInput
     ) {
-        this.validateId(
-            input.productId,
-            "product"
-        );
-
-        const product =
-            await this.productRepository.findById(
-                input.productId
-            );
-
-        if (!product) {
-            throw new Error(
-                // 404,
-                "Product not found",
-                //  ErrorCode.PRODUCT_NOT_FOUND
-            );
+        if (input.productId) {
+            this.validateId(input.productId, "product");
+        }
+        if (input.campaignId) {
+            this.validateId(input.campaignId, "campaign");
         }
 
         return this.knowledgeRepository.create(input);
     }
 
     async getKnowledgeItems(
-        productId?: string
+        productId?: string,
+        campaignId?: string
     ) {
+        if (campaignId && productId) {
+            return this.knowledgeRepository.findFiltered({ campaignId, productId });
+        }
+        if (campaignId) {
+            return this.knowledgeRepository.findByCampaignId(campaignId);
+        }
         if (productId) {
             this.validateId(productId, "product");
-
-            return this.knowledgeRepository
-                .findByProductId(productId);
+            return this.knowledgeRepository.findByProductId(productId);
         }
 
         return this.knowledgeRepository.findAll();

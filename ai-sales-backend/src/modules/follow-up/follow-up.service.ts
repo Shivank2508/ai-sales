@@ -103,7 +103,11 @@ export class FollowUpService {
 
         return this.repository.findPendingByProduct(productId)
     }
+<<<<<<< HEAD
+    determineType(action: string): FollowUpType {
+=======
     async determineType(action: string): FollowUpType {
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         const text = action.toLowerCase()
 
         if (text.includes("demo")) {
@@ -126,7 +130,11 @@ export class FollowUpService {
         return FollowUpType.GENERAL;
     }
 
+<<<<<<< HEAD
+    determinePriority(intelligence: any): FollowUpPriority {
+=======
     async determinePriority(intelligence: any): FollowUpPriority {
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         if (intelligence.outcome === "DEMO_REQUESTED") {
             return FollowUpPriority.HIGH;
         }
@@ -144,7 +152,11 @@ export class FollowUpService {
     }
 
 
+<<<<<<< HEAD
+    determineDueDate(intelligence: any): Date | undefined {
+=======
     async determineDueDate(intelligence: any): Date | undefined {
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         const actionItems = intelligence.actionItems ?? []
         const actionWithDueDate = actionItems.find((item: any) => item.dueDate)
 

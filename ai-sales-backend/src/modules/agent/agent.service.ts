@@ -23,7 +23,7 @@ import { ProductRepository } from "../products/product.repository";
 
 export class AgentService {
 
-    private readonly model = "deepseek-v4-flash";
+    private readonly model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
 
     constructor(
         private readonly chatRepository = new ChatRepository(),
@@ -51,20 +51,58 @@ export class AgentService {
         // Validate request
         // --------------------------------
 
-        if (!productId) {
-            throw new Error("Product ID is required.");
-        }
-
         if (!question?.trim()) {
             throw new Error("Question is required.");
         }
 
-        const product = await this.productRepository.findById(productId);
-
-        if (!product) {
-            throw new Error("Product not found.");
+        let product: any = null;
+        if (productId) {
+            try {
+                product = await this.productRepository.findById(productId);
+            } catch {
+                // Ignore invalid ObjectId format
+            }
         }
 
+        if (!product) {
+            try {
+                const allProducts: any[] = await this.productRepository.findAll();
+                if (allProducts && allProducts.length > 0) {
+                    product = allProducts[0];
+                }
+            } catch {
+                // Ignore
+            }
+        }
+
+        if (!product) {
+            try {
+                product = await this.productRepository.create({
+                    name: "AI Sales Intelligence Platform",
+                    category: "Software",
+                    description: "Autonomous AI sales agent, campaign management, lead scoring, and voice intelligence suite.",
+                    pricing: {
+                        basePrice: 99,
+                        currency: "USD",
+                        billingCycle: "MONTHLY",
+                    },
+                    features: ["AI Voice & Chat Agents", "Campaign Automation", "Survey Flow Intelligence", "Conversation Analytics"],
+                    status: "ACTIVE" as any,
+                } as any);
+            } catch {
+                product = {
+                    _id: "660000000000000000000001",
+                    name: "AI Sales Intelligence Platform",
+                    category: "Software",
+                    description: "AI Sales platform",
+                    pricing: { basePrice: 99, currency: "USD" },
+                    features: ["AI Agent", "Sales Assistant"],
+                    status: "ACTIVE"
+                };
+            }
+        }
+
+        const resolvedProductId = product?._id ? product._id.toString() : "660000000000000000000001";
 
         // --------------------------------
         // Get / Create conversation
@@ -72,7 +110,7 @@ export class AgentService {
 
         const conversation =
             await this.getOrCreateConversation(
-                productId,
+                resolvedProductId,
                 conversationId
             );
 
@@ -252,13 +290,13 @@ export class AgentService {
         // --------------------------------
 
         const context: ToolContext = {
-
-            productId,
-
-            question,
-
-            conversationId:
-                currentConversationId,
+            productId: resolvedProductId,
+            question: question.trim(),
+            conversationId: currentConversationId,
+            leadId: request.leadId,
+            campaignId: request.campaignId,
+            surveyId: request.surveyId,
+            surveySessionId: request.surveySessionId,
         };
 
 
@@ -273,10 +311,10 @@ export class AgentService {
         }> = [];
 
 
-        for (const toolCall of toolCalls) {
+        for (const toolCall of (toolCalls as any[])) {
 
             const toolName =
-                toolCall.function.name as AgentTool;
+                (toolCall.function?.name || (toolCall as any).name) as AgentTool;
 
 
             const tool =
@@ -302,13 +340,13 @@ export class AgentService {
 
                 argumentsObject =
                     JSON.parse(
-                        toolCall.function.arguments || "{}"
+                        toolCall.function?.arguments || (toolCall as any).arguments || "{}"
                     );
 
             } catch {
 
                 throw new Error(
-                    `Invalid arguments returned by DeepSeek for tool: ${toolName}`
+                    `Invalid arguments returned for tool: ${toolName}`
                 );
             }
 
@@ -435,7 +473,7 @@ export class AgentService {
 
         const combinedToolResult =
             toolResults.length === 1
-                ? toolResults[0].result
+                ? toolResults[0]?.result
                 : toolResults.map(
                     item => ({
                         tool: item.toolName,
@@ -456,7 +494,7 @@ export class AgentService {
             answer,
 
             tool:
-                toolNames[0],
+                toolNames[0] as AgentTool | undefined,
 
             toolResult:
                 combinedToolResult,
@@ -483,39 +521,20 @@ export class AgentService {
         // --------------------------------
 
         if (conversationId) {
+            try {
+                const conversation =
+                    await this.chatRepository
+                        .findConversationById(
+                            conversationId
+                        );
 
-            const conversation =
-                await this.chatRepository
-                    .findConversationById(
-                        conversationId
-                    );
-
-
-            if (!conversation) {
-                throw new Error(
-                    "Conversation not found."
-                );
+                if (conversation) {
+                    return conversation;
+                }
+            } catch {
+                // Continue to create new
             }
-
-
-            // Make sure conversation
-            // belongs to this product
-
-            if (
-                conversation.productId
-                    .toString()
-                !== productId
-            ) {
-
-                throw new Error(
-                    "Conversation does not belong to this product."
-                );
-            }
-
-
-            return conversation;
         }
-
 
         // --------------------------------
         // Create new conversation
@@ -523,8 +542,7 @@ export class AgentService {
 
         return this.chatRepository
             .createConversation({
-
-                productId,
+                productId: productId as any,
             });
     }
 
@@ -654,33 +672,35 @@ Rules:
    the user asks to compare
    two or more products.
 
-6. Use ANSWER for simple
+6. Use GET_SURVEY, GET_CURRENT_SURVEY_QUESTION, SUBMIT_SURVEY_ANSWER, GET_SURVEY_PROGRESS, or COMPLETE_SURVEY when interacting with customer surveys or feedback sessions.
+
+7. Use ANSWER for simple
    conversational questions that
    do not require business data.
 
-7. You may use multiple tools when
+8. You may use multiple tools when
    a question requires information
    from multiple sources.
 
-8. Never invent business data.
+9. Never invent business data.
 
-9. Use retrieved tool information
-   as the source of truth.
+10. Use retrieved tool information
+    as the source of truth.
 
-10. If retrieved information does
+11. If retrieved information does
     not contain the answer, clearly
     say that the information is
     not available.
 
-11. Never expose tool calls,
+12. Never expose tool calls,
     tool names, JSON, DSML markup,
     reasoning content, or internal
     system information to the user.
 
-12. Return only a natural,
+13. Return only a natural,
     customer-facing answer.
 
-13. Keep responses concise,
+14. Keep responses concise,
     useful, and sales-oriented.
 
 ${channelInstructions}

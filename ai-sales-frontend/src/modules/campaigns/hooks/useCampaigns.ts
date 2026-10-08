@@ -87,3 +87,64 @@ export const useDeleteCampaign = () => {
     },
   });
 };
+<<<<<<< HEAD
+
+export const useGenerateAICampaign = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      goal: string;
+      targetAudience?: string;
+      action?: string;
+      productContext?: string;
+      productId?: string;
+      createLinkedSurvey?: boolean;
+      businessName?: string;
+    }) => campaignApi.generateAICampaign(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CAMPAIGN_KEYS.all });
+    },
+  });
+};
+
+export const useEditAICampaign = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ campaignId, instructions }: { campaignId: string; instructions: string }) =>
+      campaignApi.editAICampaign(campaignId, instructions),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: CAMPAIGN_KEYS.all });
+      if (data?._id) queryClient.invalidateQueries({ queryKey: CAMPAIGN_KEYS.detail(data._id) });
+    },
+  });
+};
+
+export const useAddLeadsToCampaign = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ campaignId, leadIds }: { campaignId: string; leadIds: string[] }) =>
+      campaignApi.addLeadsToCampaign(campaignId, leadIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CAMPAIGN_KEYS.all });
+    },
+  });
+};
+
+export const useCallLeadWithAI = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      campaignId: string;
+      leadId: string;
+      customerReply?: string;
+      conversationId?: string;
+      surveySessionId?: string;
+      surveyId?: string;
+    }) => campaignApi.callLeadWithAI(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CAMPAIGN_KEYS.all });
+    },
+  });
+};
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a

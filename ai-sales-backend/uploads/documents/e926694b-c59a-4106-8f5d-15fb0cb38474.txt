@@ -1,0 +1,4 @@
+Customer Support & Retention Questionnaire:
+1. Which subscription tier are you currently enrolled in? (Starter, Growth, Enterprise)
+2. How often do your reps experience call drops or audio latency? (Never, Rarely, Monthly, Weekly, Daily)
+3. Would you recommend SalesFlow AI to other sales leaders? Rate from 1 to 5 stars.

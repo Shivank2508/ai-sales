@@ -58,7 +58,7 @@ export class RetrieverService {
 
         const map =
             new Map(
-                chunks.map(chunk => [
+                chunks.map((chunk: any) => [
                     chunk._id.toString(),
                     chunk,
                 ])
@@ -67,7 +67,7 @@ export class RetrieverService {
         return result.matches
             .map(match => {
 
-                const chunk =
+                const chunk: any =
                     map.get(match.id);
 
                 if (!chunk) {

@@ -59,7 +59,8 @@ export type KnowledgeType =
     (typeof KNOWLEDGE_TYPES)[number];
 
 export interface CreateKnowledgeInput {
-    productId: string;
+    productId?: string;
+    campaignId?: string;
 
     type: KnowledgeType;
 
@@ -70,6 +71,7 @@ export interface CreateKnowledgeInput {
 }
 
 export interface UpdateKnowledgeInput {
+    campaignId?: string;
     type?: KnowledgeType;
 
     title?: string;

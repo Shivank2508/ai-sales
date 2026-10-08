@@ -20,32 +20,60 @@ export class SurveyQuestionRepository {
         ).exec();
     }
 
+<<<<<<< HEAD
+    private resolveSurveyQuery(surveyId: string | mongoose.Types.ObjectId) {
+        if (mongoose.Types.ObjectId.isValid(surveyId.toString())) {
+            const objId = new mongoose.Types.ObjectId(surveyId.toString());
+            return { $or: [{ surveyId: objId }, { surveyId: surveyId.toString() }] };
+        }
+        return { surveyId };
+    }
+
+    async findByQuestionId(surveyId: string, questionId: string): Promise<ISurveyQuestion | null> {
+        return SurveyQuestionModel.findOne({
+            ...this.resolveSurveyQuery(surveyId),
+=======
     async findByQuestionId(surveyId: string, questionId: string): Promise<ISurveyQuestion | null> {
         return SurveyQuestionModel.findOne({
             surveyId,
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
             questionId,
         }).exec();
     }
 
     async findBySurveyId(surveyId: string): Promise<ISurveyQuestion[]> {
         return SurveyQuestionModel
+<<<<<<< HEAD
+            .find(this.resolveSurveyQuery(surveyId))
+=======
             .find({
                 surveyId,
             })
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
             .sort({
                 order: 1,
             })
             .exec();
     }
     async findFirstQuestion(surveyId: string): Promise<ISurveyQuestion | null> {
+<<<<<<< HEAD
+        return SurveyQuestionModel.findOne(
+            this.resolveSurveyQuery(surveyId)
+        ).sort({ order: 1 }).exec()
+=======
         return SurveyQuestionModel.findOne({
             surveyId
         }).sort({ order: 1 }).exec()
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     }
     async findNextByOrder(surveyId: string, currentOrder: number): Promise<ISurveyQuestion | null> {
         return SurveyQuestionModel
             .findOne({
+<<<<<<< HEAD
+                ...this.resolveSurveyQuery(surveyId),
+=======
                 surveyId,
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
                 order: {
                     $gt: currentOrder,
                 },

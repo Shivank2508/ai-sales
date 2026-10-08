@@ -6,8 +6,7 @@ const router = Router();
 const upload = multer({
     dest: "uploads/voice/",
 });
-const voiceController =
-    new VoiceController();
+const voiceController = new VoiceController();
 
 router.post(
     "/process",
@@ -21,5 +20,9 @@ router.post(
     voiceController.speak
 );
 
+router.post(
+    "/synthesize",
+    voiceController.synthesize
+);
 
 export default router;

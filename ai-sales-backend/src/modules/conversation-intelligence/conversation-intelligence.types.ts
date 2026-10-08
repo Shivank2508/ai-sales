@@ -11,12 +11,21 @@ export enum ConversationIntent {
 
 export enum ConversationSentiment {
     POSITIVE = "POSITIVE",
+<<<<<<< HEAD
+    NEUTRAL = "NEUTRAL",
+    NEGATIVE = "NEGATIVE",
+}
+
+export enum ObjectionType {
+    PRICE = "PRICE",
+=======
     Nutral = "Nutral",
     NEGATIVE = "NEGATIVE"
 }
 
 export enum ObjectionType {
     PRICE = "Price",
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     PRODUCT = "PRODUCT",
     COMPETITOR = "COMPETITOR",
     CRM = "CRM",
@@ -24,7 +33,11 @@ export enum ObjectionType {
     SECURITY = "SECURITY",
     TIMING = "TIMING",
     TRUST = "TRUST",
+<<<<<<< HEAD
+    OTHER = "OTHER",
+=======
     OTHER = "OTHER"
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 }
 
 export enum ConversationOutcome {
@@ -34,6 +47,55 @@ export enum ConversationOutcome {
     PURCHASE = "PURCHASE",
     NOT_INTERESTED = "NOT_INTERESTED",
     LOST = "LOST",
+<<<<<<< HEAD
+    UNKNOWN = "UNKNOWN",
+}
+
+export interface ConversationObjection {
+    type: ObjectionType | string;
+    text: string;
+    confidence: number;
+}
+
+export interface ConversationActionItem {
+    task: string;
+    owner?: "SALES_REP" | "CUSTOMER" | "AI";
+    dueDate?: string;
+    completed?: boolean;
+}
+
+export interface SentimentAnalysis {
+    label: "positive" | "neutral" | "negative" | string;
+    score: number;
+}
+
+export interface ConversationAnalysis {
+    conversationId?: string;
+    summary: string;
+    intent: ConversationIntent | string;
+    sentiment: ConversationSentiment | string;
+    sentimentScore?: number;
+    sentimentDetails?: SentimentAnalysis;
+    topics?: string[];
+    painPoints?: string[];
+    objections: ConversationObjection[];
+    actionItems: ConversationActionItem[];
+    outcome: ConversationOutcome | string;
+    buyingSignals: string[];
+    competitorMentions: string[];
+    customerNeeds?: string[];
+    productInterest?: string[];
+    nextBestAction: string;
+    recommendedAction?: string;
+    leadScore?: number;
+    confidence: number;
+}
+
+export interface ConversationTranscriptMessage {
+    role: "user" | "assistant" | "system";
+    content: string;
+    createdAt?: Date;
+=======
     UNKNOW = "UNKNOWN"
 }
 
@@ -67,12 +129,18 @@ export interface ConversationTranscriptMessage {
     role: | "user" | "assistant";
     content: string;
     createdAt?: Date
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 }
 
 export interface ConversationTranscript {
     conversationId: string;
     productId: string;
     messages: ConversationTranscriptMessage[];
+<<<<<<< HEAD
+    text: string;
+}
+=======
     text: string
 }
 
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a

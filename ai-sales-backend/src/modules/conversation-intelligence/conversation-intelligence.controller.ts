@@ -2,11 +2,19 @@ import { ConversationIntelligenceService } from "./conversation-intelligence.ser
 import { Request, Response } from "express";
 
 export class ConversationIntelligenceController {
+<<<<<<< HEAD
+    private readonly service = new ConversationIntelligenceService();
+
+    analyze = async (req: Request, res: Response) => {
+        try {
+            const conversationId = String(req.body.conversationId || req.params.conversationId || req.params.id || "");
+=======
     private readonly service = new ConversationIntelligenceService()
 
     analyze = async (req: Request, res: Response) => {
         try {
             const { conversationId } = req.body;
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
             if (!conversationId) {
                 return res.status(400).json({
@@ -28,5 +36,41 @@ export class ConversationIntelligenceController {
                 message: error?.message || "Failed to analyze conversation",
             });
         }
+<<<<<<< HEAD
+    };
+
+    getAnalysis = async (req: Request, res: Response) => {
+        try {
+            const conversationId = String(req.params.conversationId || req.params.id || "");
+
+            if (!conversationId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "conversationId is required",
+                });
+            }
+
+            const analysis = await this.service.getAnalysis(conversationId);
+
+            if (!analysis) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Conversation analysis not found",
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                data: analysis,
+            });
+        } catch (error: any) {
+            return res.status(400).json({
+                success: false,
+                message: error?.message || "Failed to fetch conversation analysis",
+            });
+        }
+    };
+=======
     }
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 }

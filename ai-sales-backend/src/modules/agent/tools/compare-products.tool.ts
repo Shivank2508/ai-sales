@@ -125,13 +125,13 @@ export class CompareProductsTool
         const [
             productA,
             productB,
-        ] = products;
+        ]: any[] = products;
 
         return {
 
             productA: {
                 id:
-                    productA._id.toString(),
+                    productA._id ? productA._id.toString() : "",
 
                 name:
                     productA.name,

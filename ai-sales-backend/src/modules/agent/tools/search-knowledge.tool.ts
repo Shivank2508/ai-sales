@@ -1,6 +1,8 @@
 import { EmbeddingService } from "../../../services/embedding.service";
 import { VectorRepository } from "../../../vector/vector.repository";
 import { ChunkRepository } from "../../documents/chunk.repository";
+import { KnowledgeModel } from "../../knowledge/knowledge.model";
+import { ChunkModel } from "../../documents/chunk.model";
 
 import {
     AgentSource,
@@ -79,45 +81,115 @@ export class SearchKnowledgeTool implements Tool {
             );
         }
 
+        const queryWords = question.split(/\s+/).filter(w => w.length > 2);
+        const regexFilters = queryWords.map(w => ({
+            $or: [
+                { content: { $regex: w, $options: "i" } },
+                { title: { $regex: w, $options: "i" } }
+            ]
+        }));
 
         // -----------------------------------------
-        // 2. Create embedding
+        // 1. Prioritize Campaign-Specific Knowledge First
         // -----------------------------------------
+        if (context.campaignId) {
+            try {
+                const campaignItems = await KnowledgeModel.find({
+                    $or: [
+                        { campaignId: context.campaignId },
+                        { campaignId: new KnowledgeModel.base.Types.ObjectId(context.campaignId) }
+                    ]
+                }).lean().exec();
 
-        const embedding =
-            await this.embeddingService.embedText(
-                question
-            );
-
+                if (campaignItems && campaignItems.length > 0) {
+                    const matching = campaignItems.filter(item => {
+                        const text = `${item.title} ${item.content} ${(item.tags || []).join(" ")}`.toLowerCase();
+                        return queryWords.length === 0 || queryWords.some(w => text.includes(w.toLowerCase()));
+                    });
+                    const itemsToReturn = matching.length > 0 ? matching : campaignItems;
+                    return itemsToReturn.slice(0, 5).map((item: any) => ({
+                        chunkId: item._id.toString(),
+                        documentId: item._id.toString(),
+                        documentName: `[Campaign Knowledge] ${item.title || item.type || "Document"}`,
+                        documentType: item.type || "FAQ",
+                        score: 0.98,
+                        productId: (item.productId || context.productId || "").toString(),
+                        content: `${item.title ? item.title + ": " : ""}${item.content}`,
+                        chunkIndex: 0,
+                    }));
+                }
+            } catch (err: any) {
+                console.warn("[SearchKnowledgeTool] Campaign knowledge search error:", err.message);
+            }
+        }
 
         // -----------------------------------------
-        // 3. Product namespace
+        // 2. Create embedding & search vector database
         // -----------------------------------------
+        let searchResult: any = { matches: [] };
+        try {
+            const embedding =
+                await this.embeddingService.embedText(
+                    question
+                );
 
-        const namespace =
-            `product-${context.productId}`;
+            const namespace =
+                `product-${context.productId}`;
 
+            searchResult =
+                await this.vectorRepository.search(
+                    namespace,
+                    embedding.embedding,
+                    5
+                );
+        } catch (err: any) {
+            console.warn("[SearchKnowledgeTool] Vector search warning:", err.message);
+        }
 
         // -----------------------------------------
-        // 4. Search Pinecone
+        // Fallback: If no vector matches, search general MongoDB KnowledgeModel & ChunkModel
         // -----------------------------------------
-
-        const searchResult =
-            await this.vectorRepository.search(
-                namespace,
-                embedding.embedding,
-                5
-            );
-
-
-        // -----------------------------------------
-        // 5. Handle no results
-        // -----------------------------------------
-
         if (
             !searchResult.matches ||
             searchResult.matches.length === 0
         ) {
+            // Search general KnowledgeModel
+            const fallbackItems = await KnowledgeModel.find(
+                regexFilters.length > 0 ? { $or: regexFilters } : {}
+            ).limit(5).lean().exec();
+
+            if (fallbackItems && fallbackItems.length > 0) {
+                return fallbackItems.map((item: any) => ({
+                    chunkId: item._id.toString(),
+                    documentId: item._id.toString(),
+                    documentName: item.title || item.type || "Knowledge Document",
+                    documentType: item.type || "FAQ",
+                    score: 0.9,
+                    productId: (item.productId || context.productId || "").toString(),
+                    content: `${item.title ? item.title + ": " : ""}${item.content}`,
+                    chunkIndex: 0,
+                }));
+            }
+
+
+            // 3. Also check ChunkModel in MongoDB
+            const chunkMatches = await ChunkModel.find(
+                queryWords.length > 0 ? { $or: queryWords.map(w => ({ content: { $regex: w, $options: "i" } })) } : {}
+            ).limit(5).lean().exec();
+
+            if (chunkMatches && chunkMatches.length > 0) {
+                return chunkMatches.map((chunk: any) => ({
+                    chunkId: chunk._id.toString(),
+                    documentId: chunk.documentId?.toString() || chunk._id.toString(),
+                    documentName: chunk.metadata?.documentName || "Uploaded Document",
+                    documentType: chunk.metadata?.documentType || "DOCUMENT",
+                    score: 0.85,
+                    productId: (chunk.productId || context.productId || "").toString(),
+                    content: chunk.content,
+                    chunkIndex: chunk.chunkIndex || 0,
+                }));
+            }
+
             return [];
         }
 
@@ -128,7 +200,7 @@ export class SearchKnowledgeTool implements Tool {
 
         const chunkIds =
             searchResult.matches.map(
-                match => match.id
+                (match: any) => match.id
             );
 
 
@@ -148,7 +220,7 @@ export class SearchKnowledgeTool implements Tool {
 
         const chunkMap =
             new Map(
-                chunks.map(chunk => [
+                chunks.map((chunk: any) => [
                     chunk._id.toString(),
                     chunk,
                 ])
@@ -159,60 +231,24 @@ export class SearchKnowledgeTool implements Tool {
         // 9. Normalize search results
         // -----------------------------------------
 
-        return searchResult.matches
+        const results: KnowledgeSearchResult[] = [];
 
-            .map(match => {
+        for (const match of searchResult.matches) {
+            const chunk: any = chunkMap.get(match.id);
+            if (!chunk) continue;
 
-                const chunk =
-                    chunkMap.get(match.id);
+            results.push({
+                chunkId: chunk._id.toString(),
+                documentId: chunk.documentId.toString(),
+                documentName: chunk.metadata?.documentName ?? "Unknown document",
+                documentType: chunk.metadata?.documentType,
+                score: match.score ?? 0,
+                productId: chunk.productId.toString(),
+                content: chunk.content,
+                chunkIndex: chunk.chunkIndex,
+            });
+        }
 
-
-                // Pinecone result exists
-                // but MongoDB chunk doesn't
-                if (!chunk) {
-                    return null;
-                }
-
-
-                return {
-
-                    // Source information
-                    chunkId:
-                        chunk._id.toString(),
-
-                    documentId:
-                        chunk.documentId.toString(),
-
-                    documentName:
-                        chunk.metadata?.documentName ??
-                        "Unknown document",
-
-                    documentType:
-                        chunk.metadata?.documentType,
-
-                    score:
-                        match.score ?? 0,
-
-
-                    // Internal knowledge result
-                    productId:
-                        chunk.productId.toString(),
-
-                    content:
-                        chunk.content,
-
-                    chunkIndex:
-                        chunk.chunkIndex,
-                };
-            })
-
-
-            // Remove missing chunks
-            .filter(
-                (
-                    result
-                ): result is KnowledgeSearchResult =>
-                    result !== null
-            );
+        return results;
     }
 }

@@ -3,8 +3,8 @@ import { CreateProductInput, UpdateProductInput } from "./product.types";
 
 export class ProductRepository {
     async create(input: CreateProductInput) {
-        const product = await ProductModel.create(input);
-        return product.toObject()
+        const product: any = await ProductModel.create(input as any);
+        return product.toObject ? product.toObject() : product;
     }
     async findAll() {
         return ProductModel

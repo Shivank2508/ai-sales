@@ -31,13 +31,19 @@ export async function getKnowledgeItems(
         typeof req.query.productId === "string"
             ? req.query.productId
             : undefined;
+    const campaignId =
+        typeof req.query.campaignId === "string"
+            ? req.query.campaignId
+            : undefined;
 
     const items =
         await knowledgeService.getKnowledgeItems(
-            productId
+            productId,
+            campaignId
         );
 
     res.send({
+        success: true,
         message: "Knowledge items fetched successfully",
         data: items,
     });

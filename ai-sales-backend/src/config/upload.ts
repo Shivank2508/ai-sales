@@ -64,3 +64,34 @@ export const documentUpload = multer({
         callback(null, true);
     },
 });
+
+const allowedSurveyExtensions = new Set([
+    ".json",
+    ".csv",
+    ".txt",
+    ".pdf",
+    ".docx",
+    ".tsv",
+    ".doc",
+]);
+
+export const surveyUpload = multer({
+    storage,
+    limits: {
+        fileSize: 20 * 1024 * 1024,
+    },
+    fileFilter: (_req, file, callback) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (
+            allowedSurveyExtensions.has(ext) ||
+            file.mimetype.startsWith("text/") ||
+            file.mimetype === "application/json" ||
+            file.mimetype === "application/pdf" ||
+            file.mimetype.includes("wordprocessingml")
+        ) {
+            callback(null, true);
+        } else {
+            callback(new Error("Only JSON, CSV, TXT, PDF and DOCX files are supported for survey upload"));
+        }
+    },
+});

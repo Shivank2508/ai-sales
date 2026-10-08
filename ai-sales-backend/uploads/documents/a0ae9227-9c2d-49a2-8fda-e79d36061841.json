@@ -1,0 +1,26 @@
+{
+  "name": "Q4 Enterprise Voice AI Questionnaire",
+  "description": "Voice survey for assessing enterprise interest in autonomous sales outreach",
+  "questions": [
+    {
+      "text": "How many SDRs or outbound sales reps does your organization employ?",
+      "aiPrompt": "To start off, approximately how many SDRs or sales reps are on your outbound team today?",
+      "type": "single_choice",
+      "options": ["1-5 reps", "6-20 reps", "21-50 reps", "50+ reps"],
+      "required": true
+    },
+    {
+      "text": "What is your main challenge with phone sales qualification?",
+      "aiPrompt": "What would you say is the biggest headache with phone sales qualification right now?",
+      "type": "long_text",
+      "required": true
+    },
+    {
+      "text": "How likely are you to run an AI voice pilot within the next 30 days?",
+      "aiPrompt": "On a scale from 1 to 5, how likely are you to test an AI voice pilot over the next month?",
+      "type": "rating",
+      "options": ["1", "2", "3", "4", "5"],
+      "required": true
+    }
+  ]
+}

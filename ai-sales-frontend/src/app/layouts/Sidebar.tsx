@@ -6,6 +6,10 @@ import {
   Megaphone,
   FileQuestion,
   MessagesSquare,
+<<<<<<< HEAD
+  PhoneCall,
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
   Bot,
   BookOpen,
   Package,
@@ -25,6 +29,14 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+<<<<<<< HEAD
+  { label: "1. Campaigns", path: "/campaigns", icon: Megaphone },
+  { label: "2. Surveys & Forms", path: "/surveys", icon: FileQuestion },
+  { label: "3. AI Voice Calling", path: "/ai-agents/live-execution", icon: PhoneCall, badge: "LIVE CALL" },
+  { label: "Leads Database", path: "/leads", icon: Users },
+  { label: "Knowledge Base", path: "/knowledge", icon: BookOpen },
+  { label: "Analytics & Responses", path: "/analytics", icon: BarChart3 },
+=======
   { label: "Campaigns", path: "/campaigns", icon: Megaphone },
   { label: "Surveys", path: "/surveys", icon: FileQuestion },
   { label: "Conversations", path: "/conversations", icon: MessagesSquare },
@@ -36,6 +48,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Analytics", path: "/analytics", icon: BarChart3 },
   { label: "Reports", path: "/reports", icon: FileSpreadsheet },
   { label: "Settings", path: "/settings", icon: Settings },
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 ];
 
 export const Sidebar: React.FC<{ isOpen: boolean; onCloseMobile?: () => void }> = ({

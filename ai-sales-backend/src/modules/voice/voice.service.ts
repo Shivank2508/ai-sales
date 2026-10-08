@@ -13,12 +13,7 @@ export class VoiceService {
         request: VoiceRequest
     ): Promise<VoiceResponse> {
         const startTime = Date.now();
-        const { productId, conversationId, transcript } = request
-
-
-        if (!productId) {
-            throw new Error("productId is required");
-        }
+        const { productId, conversationId, transcript, leadId, campaignId, surveySessionId } = request;
 
         if (!transcript?.trim()) {
             throw new Error("transcript is required");
@@ -30,6 +25,9 @@ export class VoiceService {
                 question: transcript.trim(),
                 conversationId,
                 channel: "VOICE",
+                leadId,
+                campaignId,
+                surveySessionId,
             });
         const speech =
             await this.textToSpeechService.synthesize(

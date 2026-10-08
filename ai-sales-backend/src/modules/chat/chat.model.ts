@@ -6,7 +6,7 @@ const MessageSchema = new Schema(
         role: {
             type: String,
             enum: CHAT_ROLES,
-            required: true
+            required: true,
         },
         content: {
             type: String,
@@ -15,50 +15,89 @@ const MessageSchema = new Schema(
         },
         createdAt: {
             type: Date,
-
             default: Date.now,
         },
-    }, {
-    _id: false,
-}
-)
+    },
+    {
+        _id: false,
+    }
+);
 
-const ConversationSchema =
-    new Schema(
-        {
-            productId: {
-                type: Schema.Types.ObjectId,
-
-                ref: "Product",
-
-                required: true,
-
-                index: true,
-            },
-
-            title: {
-                type: String,
-
-                trim: true,
-            },
-
-            messages: {
-                type: [MessageSchema],
-
-                default: [],
-            },
+const ConversationSchema = new Schema(
+    {
+        productId: {
+            type: Schema.Types.ObjectId,
+            ref: "Product",
+            index: true,
         },
-        {
-            timestamps: true,
-        }
-    );
+        leadId: {
+            type: Schema.Types.ObjectId,
+            ref: "Lead",
+            index: true,
+        },
+        campaignId: {
+            type: Schema.Types.ObjectId,
+            ref: "Campaign",
+            index: true,
+        },
+        surveyId: {
+            type: Schema.Types.ObjectId,
+            ref: "Survey",
+            index: true,
+        },
+        surveySessionId: {
+            type: Schema.Types.ObjectId,
+            ref: "SurveyResponse",
+            index: true,
+        },
+        channel: {
+            type: String,
+            enum: ["CHAT", "VOICE"],
+            default: "CHAT",
+        },
+        status: {
+            type: String,
+            enum: ["ACTIVE", "COMPLETED", "ABANDONED"],
+            default: "ACTIVE",
+        },
+        durationSeconds: {
+            type: Number,
+            default: 0,
+        },
+        title: {
+            type: String,
+            trim: true,
+        },
+        messages: {
+            type: [MessageSchema],
+            default: [],
+        },
+        metadata: {
+            type: Schema.Types.Mixed,
+            default: {},
+        },
+    },
+    {
+        timestamps: true,
+    }
+);
+
 ConversationSchema.index({
     productId: 1,
     updatedAt: -1,
 });
 
-export const ConversationModel =
-    model(
-        "Conversation",
-        ConversationSchema
-    );
+ConversationSchema.index({
+    leadId: 1,
+    createdAt: -1,
+});
+
+ConversationSchema.index({
+    campaignId: 1,
+    createdAt: -1,
+});
+
+export const ConversationModel = model(
+    "Conversation",
+    ConversationSchema
+);

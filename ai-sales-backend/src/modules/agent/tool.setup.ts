@@ -2,34 +2,33 @@ import { ToolRegistry } from "./tool.registry";
 import { AnswerTool } from "./tools/answer.tool";
 import { CompareProductsTool } from "./tools/compare-products.tool";
 import { ListDocumentsTool } from "./tools/list-documents.tool";
-
 import { SearchKnowledgeTool } from "./tools/search-knowledge.tool";
 import { SearchLeadsTool } from "./tools/search-leads.tool";
 import { SearchProductTool } from "./tools/search-product.tool";
+import { GetSurveyTool } from "./tools/get-survey.tool";
+import { GetCurrentSurveyQuestionTool } from "./tools/get-current-question.tool";
+import { SubmitSurveyAnswerTool } from "./tools/submit-survey-answer.tool";
+import { GetSurveyProgressTool } from "./tools/get-survey-progress.tool";
+import { CompleteSurveyTool } from "./tools/complete-survey.tool";
+import { CreateSurveyAITool } from "./tools/create-survey-ai.tool";
+import { CreateCampaignAITool } from "./tools/create-campaign-ai.tool";
+import { AddLeadsToCampaignTool } from "./tools/add-leads-to-campaign.tool";
+import { LaunchCampaignCallTool } from "./tools/launch-campaign-call.tool";
 
-export const toolRegistry =
-    new ToolRegistry();
+export const toolRegistry = new ToolRegistry();
 
-toolRegistry.register(
-    new SearchKnowledgeTool()
-);
-
-toolRegistry.register(
-    new SearchProductTool()
-);
-
-toolRegistry.register(
-    new SearchLeadsTool()
-);
-
-toolRegistry.register(
-    new ListDocumentsTool()
-);
-
-toolRegistry.register(
-    new CompareProductsTool()
-);
-
-toolRegistry.register(
-    new AnswerTool()
-);
+toolRegistry.register(new SearchKnowledgeTool());
+toolRegistry.register(new SearchProductTool());
+toolRegistry.register(new SearchLeadsTool());
+toolRegistry.register(new ListDocumentsTool());
+toolRegistry.register(new CompareProductsTool());
+toolRegistry.register(new AnswerTool());
+toolRegistry.register(new GetSurveyTool());
+toolRegistry.register(new GetCurrentSurveyQuestionTool());
+toolRegistry.register(new SubmitSurveyAnswerTool());
+toolRegistry.register(new GetSurveyProgressTool());
+toolRegistry.register(new CompleteSurveyTool());
+toolRegistry.register(new CreateSurveyAITool());
+toolRegistry.register(new CreateCampaignAITool());
+toolRegistry.register(new AddLeadsToCampaignTool());
+toolRegistry.register(new LaunchCampaignCallTool());

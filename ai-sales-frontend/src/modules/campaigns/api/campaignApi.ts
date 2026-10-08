@@ -6,12 +6,21 @@ export const campaignApi = {
   // GET all campaigns
   async getCampaigns(filters?: { status?: string; type?: string; search?: string }): Promise<ICampaign[]> {
     try {
+<<<<<<< HEAD
+      const res = await axiosInstance.get("/api/campaigns");
+      if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        return res.data.data;
+      }
+    } catch (err) {
+      console.warn("Backend campaigns fetch error:", err);
+=======
       const res = await axiosInstance.get("/api/campaigns/business/biz-pg-01");
       if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
         return res.data.data;
       }
     } catch {
       // Graceful fallback to mock store
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     }
 
     let list = mockStore.getCampaigns();
@@ -180,4 +189,77 @@ export const campaignApi = {
     }
     return this.updateCampaign(campaignId, { surveyId });
   },
+<<<<<<< HEAD
+
+  // AI GENERATE campaign
+  async generateAICampaign(payload: {
+    goal: string;
+    targetAudience?: string;
+    action?: string;
+    productContext?: string;
+    productId?: string;
+    createLinkedSurvey?: boolean;
+    businessName?: string;
+  }): Promise<{ campaign: ICampaign; linkedSurvey?: any; outreachScript?: string; attachedLeadsCount?: number }> {
+    const res = await axiosInstance.post("/api/campaigns/generate", payload);
+    return res.data?.data;
+  },
+
+  // AI EDIT campaign
+  async editAICampaign(campaignId: string, instructions: string): Promise<ICampaign> {
+    const res = await axiosInstance.put(`/api/campaigns/${campaignId}/ai-edit`, { instructions });
+    return res.data?.data;
+  },
+
+  // ADD LEADS to campaign
+  async addLeadsToCampaign(campaignId: string, leadIds: string[]): Promise<{ addedCount: number; totalLeadsInCampaign: number }> {
+    const res = await axiosInstance.post(`/api/campaigns/${campaignId}/leads`, { leadIds });
+    return res.data?.data;
+  },
+
+  // CALL LEAD with AI Voice
+  async callLeadWithAI(payload: {
+    campaignId: string;
+    leadId: string;
+    customerReply?: string;
+    conversationId?: string;
+    surveySessionId?: string;
+    surveyId?: string;
+  }): Promise<{
+    campaignId?: string;
+    leadId?: string;
+    leadName?: string;
+    leadPhone?: string;
+    conversationId: string;
+    surveyId?: string;
+    surveyName?: string;
+    surveySessionId?: string;
+    currentQuestionId?: string;
+    currentQuestionIndex?: number;
+    totalQuestions?: number;
+    completed?: boolean;
+    answers?: any[];
+    questions?: any[];
+    openingSpeech: string;
+    audioBase64: string;
+    mimeType: string;
+    sources?: any[];
+    toolsUsed?: string[];
+    status: string;
+  }> {
+    const res = await axiosInstance.post(
+      `/api/campaigns/${payload.campaignId}/call-lead`,
+      {
+        leadId: payload.leadId,
+        customerReply: payload.customerReply,
+        conversationId: payload.conversationId,
+        surveySessionId: payload.surveySessionId,
+        surveyId: payload.surveyId,
+      },
+      { timeout: 60000 }
+    );
+    return res.data?.data;
+  },
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 };

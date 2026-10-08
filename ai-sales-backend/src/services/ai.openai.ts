@@ -13,4 +13,6 @@ export const geminiEmbeddings = new GoogleGenerativeAIEmbeddings({
 export const deepseek = new OpenAI({
     apiKey: process.env.DEEPSEEK_API_KEY,
     baseURL: "https://api.deepseek.com",
+    timeout: 30000,
+    maxRetries: 1,
 });

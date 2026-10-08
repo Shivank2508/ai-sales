@@ -11,6 +11,29 @@ import {
 } from "../../../types";
 
 export const surveyApi = {
+<<<<<<< HEAD
+  // GET all surveys (optionally filtered by campaignId)
+  async getAllSurveys(campaignId?: string): Promise<ISurvey[]> {
+    try {
+      const params = campaignId ? { campaignId } : undefined;
+      const res = await axiosInstance.get("/api/surveys", { params });
+      if (res.data?.data) {
+        return res.data.data;
+      }
+    } catch (err) {
+      console.warn("Backend getAllSurveys error:", err);
+    }
+    const surveys = mockStore.getSurveys();
+    const list = Object.values(surveys);
+    if (campaignId) {
+      return list.filter((s) => s.campaignId === campaignId);
+    }
+    return list;
+  },
+
+
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
   // GET survey by ID
   async getSurveyById(surveyId: string): Promise<ISurvey> {
     try {
@@ -33,6 +56,18 @@ export const surveyApi = {
   // GET survey by Campaign ID
   async getSurveyByCampaignId(campaignId: string): Promise<ISurvey | null> {
     try {
+<<<<<<< HEAD
+      const res = await axiosInstance.get(`/api/surveys/campaign/${campaignId}`);
+      if (res.data?.data) {
+        return res.data.data;
+      }
+    } catch (err) {
+      console.warn("Backend getSurveyByCampaignId error:", err);
+    }
+
+    try {
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
       const surveys = mockStore.getSurveys();
       const found = Object.values(surveys).find((s) => s.campaignId === campaignId);
       return found || null;
@@ -62,12 +97,25 @@ export const surveyApi = {
     };
 
     try {
+<<<<<<< HEAD
+      const res = await axiosInstance.post("/api/surveys", {
+        ...newSurvey,
+        ...payload,
+        campaignId,
+      });
+      if (res.data?.data) {
+        return res.data.data;
+      }
+    } catch (err) {
+      console.warn("Backend createSurvey error:", err);
+=======
       const res = await axiosInstance.post("/api/surveys", newSurvey);
       if (res.data?.data) {
         return res.data.data;
       }
     } catch {
       // Fallback
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     }
 
     const surveys = mockStore.getSurveys();
@@ -83,8 +131,13 @@ export const surveyApi = {
       if (res.data?.data) {
         return res.data.data;
       }
+<<<<<<< HEAD
+    } catch (err) {
+      console.warn("Backend updateSurvey error:", err);
+=======
     } catch {
       // Fallback
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     }
 
     const surveys = mockStore.getSurveys();
@@ -103,6 +156,19 @@ export const surveyApi = {
   // SAVE ALL QUESTIONS
   async saveQuestions(surveyId: string, questions: ISurveyQuestion[]): Promise<ISurvey> {
     const reordered = questions.map((q, idx) => ({ ...q, order: idx + 1 }));
+<<<<<<< HEAD
+    try {
+      const res = await axiosInstance.post(`/api/surveys/${surveyId}/questions/bulk`, {
+        questions: reordered,
+      });
+      if (res.data?.data) {
+        return res.data.data;
+      }
+    } catch (err) {
+      console.warn("Backend saveQuestions error:", err);
+    }
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     return this.updateSurvey(surveyId, { questions: reordered });
   },
 
@@ -268,4 +334,85 @@ export const surveyApi = {
       passedChecks,
     };
   },
+<<<<<<< HEAD
+
+  // AI GENERATE survey
+  async generateAISurvey(payload: {
+    topic: string;
+    targetAudience?: string;
+    questionCount?: number;
+    channel?: string;
+    productId?: string;
+    campaignId?: string;
+  }): Promise<{ survey: ISurvey; questions: ISurveyQuestion[] }> {
+    const res = await axiosInstance.post("/api/surveys/generate", payload);
+    return res.data?.data;
+  },
+
+  // AI EDIT survey
+  async editAISurvey(surveyId: string, instructions: string): Promise<{ survey: ISurvey; questions: ISurveyQuestion[] }> {
+    const res = await axiosInstance.put(`/api/surveys/${surveyId}/ai-edit`, { instructions });
+    return res.data?.data;
+  },
+
+  // UPLOAD survey from file or text
+  async uploadSurvey(payload: {
+    file?: File;
+    content?: string;
+    name?: string;
+    campaignId?: string;
+    channel?: string;
+  }): Promise<{ survey: ISurvey; questions: ISurveyQuestion[]; parsedCount: number }> {
+    if (payload.file) {
+      const formData = new FormData();
+      formData.append("file", payload.file);
+      if (payload.name) formData.append("name", payload.name);
+      if (payload.campaignId) formData.append("campaignId", payload.campaignId);
+      if (payload.channel) formData.append("channel", payload.channel);
+
+      const res = await axiosInstance.post("/api/surveys/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data?.data;
+    } else {
+      const res = await axiosInstance.post("/api/surveys/upload", {
+        content: payload.content,
+        name: payload.name,
+        campaignId: payload.campaignId,
+        channel: payload.channel,
+      });
+      return res.data?.data;
+    }
+  },
+
+  // IMPORT questions into existing survey
+  async importQuestions(
+    surveyId: string,
+    payload: { file?: File; content?: string; append?: boolean }
+  ): Promise<{ survey: ISurvey; questions: ISurveyQuestion[]; addedCount: number }> {
+    if (payload.file) {
+      const formData = new FormData();
+      formData.append("file", payload.file);
+      formData.append("append", String(payload.append ?? true));
+
+      const res = await axiosInstance.post(`/api/surveys/${surveyId}/upload-questions`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data?.data;
+    } else {
+      const res = await axiosInstance.post(`/api/surveys/${surveyId}/upload-questions`, {
+        content: payload.content,
+        append: payload.append ?? true,
+      });
+      return res.data?.data;
+    }
+  },
+
+  // SYNTHESIZE voice speech (TTS)
+  async synthesizeVoice(text: string): Promise<{ audioBase64: string; mimeType: string }> {
+    const res = await axiosInstance.post("/api/voice/synthesize", { text });
+    return res.data?.data;
+  },
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 };

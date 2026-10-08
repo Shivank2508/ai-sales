@@ -36,6 +36,35 @@ export class KnowledgeRepository {
             .exec();
     }
 
+    async findByCampaignId(campaignId: string) {
+        return KnowledgeModel
+            .find({
+                $or: [
+                    { campaignId },
+                    { campaignId: new KnowledgeModel.base.Types.ObjectId(campaignId) }
+                ]
+            })
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec();
+    }
+
+    async findFiltered(filter: { productId?: string; campaignId?: string }) {
+        const query: any = {};
+        if (filter.productId) query.productId = filter.productId;
+        if (filter.campaignId) {
+            query.$or = [
+                { campaignId: filter.campaignId },
+                { campaignId: new KnowledgeModel.base.Types.ObjectId(filter.campaignId) }
+            ];
+        }
+        return KnowledgeModel
+            .find(query)
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec();
+    }
+
     async updateById(
         id: string,
         input: UpdateKnowledgeInput

@@ -8,7 +8,12 @@ export const createKnowledgeSchema = z.object({
     productId: z
         .string()
         .trim()
-        .min(1),
+        .optional(),
+
+    campaignId: z
+        .string()
+        .trim()
+        .optional(),
 
     type: z.enum(KNOWLEDGE_TYPES),
 

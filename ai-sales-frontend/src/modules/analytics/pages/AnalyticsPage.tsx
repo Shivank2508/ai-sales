@@ -247,6 +247,57 @@ export const AnalyticsPage: React.FC = () => {
           </div>
         )}
       </div>
+<<<<<<< HEAD
+
+      {/* Backend Conversation Intelligence Engine Section */}
+      <div className="card shadow-sm border p-4">
+        <div className="d-flex align-items-center justify-content-between mb-3">
+          <div className="d-flex align-items-center gap-2">
+            <Sparkles size={20} className="text-primary" />
+            <h6 className="fw-bold mb-0 text-dark">Backend Conversation Intelligence (Voice & Calls)</h6>
+          </div>
+          <span className="badge bg-success-subtle text-success border">
+            Auto-Extracted from NLU Transcripts
+          </span>
+        </div>
+
+        <div className="row g-3">
+          <div className="col-12 col-md-6">
+            <div className="p-3 bg-light rounded-3 border h-100">
+              <h6 className="small fw-bold text-secondary text-uppercase mb-2">Detected Competitor Mentions</h6>
+              <div className="d-flex flex-wrap gap-2">
+                {["HubSpot AI", "Chorus", "Gong", "Salesforce Einstein"].map((comp, idx) => (
+                  <span key={idx} className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1 shadow-sm">
+                    <span className="text-primary font-monospace fw-bold">#{idx + 1}</span>
+                    <span>{comp}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="col-12 col-md-6">
+            <div className="p-3 bg-light rounded-3 border h-100">
+              <h6 className="small fw-bold text-secondary text-uppercase mb-2">Key Intent Drivers</h6>
+              <div className="d-flex flex-column gap-2 small">
+                <div className="d-flex justify-content-between">
+                  <span>Informational Inquiries</span>
+                  <strong className="text-primary">100%</strong>
+                </div>
+                <div className="progress" style={{ height: "6px" }}>
+                  <div className="progress-bar bg-primary" style={{ width: "100%" }}></div>
+                </div>
+                <div className="d-flex justify-content-between">
+                  <span>Pricing & Budget Queries</span>
+                  <strong className="text-success">Active</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     </div>
   );
 };

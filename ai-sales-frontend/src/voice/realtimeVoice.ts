@@ -146,17 +146,26 @@ export class RealtimeVoiceClient {
     stopMicrophone() {
         this.workletNode?.disconnect();
         this.sourceNode?.disconnect();
+<<<<<<< HEAD
+        this.microphoneStream?.getTracks().forEach(track => track.stop());
+        this.audioContext?.close().catch(() => {});
+        this.workletNode = undefined;
+        this.sourceNode = undefined;
+        this.microphoneStream = undefined;
+        this.audioContext = undefined;
+=======
         this.microphoneStream?.getTracks().forEach(track => track.stop)
         this.audioContext?.close()
         this.workletNode = undefined
         this.sourceNode = undefined
         this.microphoneStream = undefined
         this.audioContext = undefined
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     }
 
     stopSpeaking() {
         if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-            return
+            return;
         }
 
         this.socket.send(
@@ -168,19 +177,23 @@ export class RealtimeVoiceClient {
 
     interrupt() {
         if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-            return
+            return;
         }
         this.socket.send(
             JSON.stringify({
                 type: "interrupt"
             })
-        )
+        );
     }
 
     disconnect() {
+<<<<<<< HEAD
+        this.stopMicrophone();
+=======
         this.startMicrophone();
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
         this.socket?.close();
-        this.socket = undefined
+        this.socket = undefined;
     }
 
     getConversationId() {

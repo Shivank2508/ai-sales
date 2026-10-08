@@ -12,15 +12,64 @@ export class SurveyService {
     private readonly responseRepository = new SurveyResponseRepository()
 
     async getSurvey(surveyId: string) {
+<<<<<<< HEAD
+        const survey = await this.surveyRepository.findById(surveyId);
+        if (!survey) return null;
+        const questions = await this.questionRepository.findBySurveyId(surveyId);
+        const obj = (survey as any).toObject ? (survey as any).toObject() : survey;
+        return {
+            ...obj,
+            questions: questions || [],
+        };
+    }
+
+    async getSurveyByCampaign(campaignId: string) {
+        const survey = await this.surveyRepository.findByCampaignId(campaignId);
+        if (!survey) return null;
+        const questions = await this.questionRepository.findBySurveyId(survey._id.toString());
+        const obj = (survey as any).toObject ? (survey as any).toObject() : survey;
+        return {
+            ...obj,
+            questions: questions || [],
+        };
+    }
+
+    async getAllSurveys(campaignId?: string) {
+        if (campaignId) {
+            return this.surveyRepository.findAllByCampaignId(campaignId);
+        }
+        return this.surveyRepository.findAll();
+    }
+
+
+=======
         return this.surveyRepository.findById(surveyId)
     }
 
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     async getQuestions(surveyId: string) {
         return this.questionRepository.findBySurveyId(
             surveyId
         );
     }
 
+<<<<<<< HEAD
+    async saveQuestions(surveyId: string, questions: Partial<ISurveyQuestion>[]) {
+        await this.questionRepository.deleteBySurveyId(surveyId);
+        if (questions && questions.length > 0) {
+            const prepared = questions.map((q, idx) => ({
+                ...q,
+                surveyId: new mongoose.Types.ObjectId(surveyId),
+                order: idx + 1,
+                questionId: q.questionId || `q_${idx + 1}`,
+            }));
+            await this.questionRepository.createMany(prepared as any);
+        }
+        return this.getSurvey(surveyId);
+    }
+
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     async startSurvey(params: {
         surveyId: string;
         campaignId: string;
@@ -108,6 +157,44 @@ export class SurveyService {
         language?: string;
         welcomeMessage?: string;
         endMessage?: string;
+<<<<<<< HEAD
+        createdBy?: string;
+        questions?: Partial<ISurveyQuestion>[];
+    }) {
+        const cId = data.campaignId && mongoose.Types.ObjectId.isValid(data.campaignId)
+            ? new mongoose.Types.ObjectId(data.campaignId)
+            : new mongoose.Types.ObjectId();
+        const uId = data.createdBy && mongoose.Types.ObjectId.isValid(data.createdBy)
+            ? new mongoose.Types.ObjectId(data.createdBy)
+            : new mongoose.Types.ObjectId();
+
+        let survey = await this.surveyRepository.findByCampaignId(data.campaignId);
+        if (!survey) {
+            survey = await this.surveyRepository.create({
+                campaignId: cId,
+                name: data.name,
+                description: data.description,
+                language: data.language || "en-IN",
+                welcomeMessage: data.welcomeMessage,
+                endMessage: data.endMessage,
+                createdBy: uId,
+            });
+        } else {
+            survey = await this.surveyRepository.update(survey._id.toString(), {
+                name: data.name,
+                description: data.description,
+                language: data.language || "en-IN",
+                welcomeMessage: data.welcomeMessage,
+                endMessage: data.endMessage,
+            });
+        }
+
+        if (survey && data.questions && data.questions.length > 0) {
+            await this.saveQuestions(survey._id.toString(), data.questions);
+        }
+
+        return this.getSurvey(survey!._id.toString());
+=======
         createdBy: string;
     }) {
         const existing = await this.surveyRepository.findByCampaignId(data.campaignId)
@@ -124,6 +211,7 @@ export class SurveyService {
             endMessage: data.endMessage,
             createdBy: new mongoose.Types.ObjectId(data.createdBy),
         });
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     }
 
     async updateSurvey(surveyId: string, data: Partial<{

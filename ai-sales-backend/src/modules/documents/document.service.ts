@@ -51,7 +51,7 @@ export class DocumentService {
             storedName: file.filename,
             filePath: file.path,
             mimeType: file.mimetype,
-            fileSize: file.size,
+            filesize: file.size,
         });
 
         let savedChunks: Awaited<
@@ -120,7 +120,7 @@ export class DocumentService {
             const vectors = savedChunks.map((chunk, index) => ({
                 id: chunk._id.toString(),
 
-                values: embeddings[index],
+                values: embeddings[index] ?? [],
 
                 metadata: {
                     productId,
@@ -129,6 +129,7 @@ export class DocumentService {
                     chunkIndex: chunk.chunkIndex,
 
                     content: chunk.content,
+                    text: chunk.content,
 
                     documentName: name,
                     documentType: type,

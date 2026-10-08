@@ -1,105 +1,108 @@
-import { Request, Response } from "express";
-
+import { Request, Response, NextFunction } from "express";
 import { ChatService } from "./chat.service";
 
 export class ChatController {
-
     constructor(
-        private readonly chatService =
-            new ChatService()
-    ) { }
+        private readonly chatService = new ChatService()
+    ) {}
 
-    chat = async (
-        req: Request,
-        res: Response
-    ) => {
+    chat = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { productId, conversationId, message, leadId, campaignId, surveyId, surveySessionId, channel } = req.body;
 
-        const result =
-            await this.chatService.chat({
+            if (!message || !message.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: "message is required",
+                });
+            }
 
-                productId:
-                    req.body.productId,
-
-                conversationId:
-                    req.body.conversationId,
-
-                message:
-                    req.body.message,
-
+            const result = await this.chatService.chat({
+                productId,
+                conversationId,
+                message: message.trim(),
+                leadId,
+                campaignId,
+                surveyId,
+                surveySessionId,
+                channel,
             });
 
-        return res.status(200).json({
-
-            success: true,
-
-            message:
-                "Chat completed successfully.",
-
-            data: result,
-
-        });
-
+            return res.status(200).json({
+                success: true,
+                message: "Chat completed successfully.",
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
     };
 
-    getConversation = async (
-        req: Request,
-        res: Response
-    ) => {
+    listConversations = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { leadId, campaignId, productId, surveySessionId } = req.query;
+            const conversations = await this.chatService.listConversations({
+                leadId: leadId ? String(leadId) : undefined,
+                campaignId: campaignId ? String(campaignId) : undefined,
+                productId: productId ? String(productId) : undefined,
+                surveySessionId: surveySessionId ? String(surveySessionId) : undefined,
+            });
 
-        const conversation =
-            await this.chatService.getConversation(
-                req.params.id
-            );
-
-        return res.json({
-
-            success: true,
-
-            data: conversation,
-
-        });
-
+            return res.json({
+                success: true,
+                data: conversations,
+            });
+        } catch (error) {
+            next(error);
+        }
     };
 
-    getProductConversations = async (
-        req: Request,
-        res: Response
-    ) => {
+    getConversation = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const conversationId = String(req.params.id || "");
+            const conversation = await this.chatService.getConversation(conversationId);
 
-        const conversations =
-            await this.chatService
-                .getProductConversations(
-                    req.params.productId
-                );
+            if (!conversation) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Conversation not found",
+                });
+            }
 
-        return res.json({
-
-            success: true,
-
-            data: conversations,
-
-        });
-
+            return res.json({
+                success: true,
+                data: conversation,
+            });
+        } catch (error) {
+            next(error);
+        }
     };
 
-    deleteConversation = async (
-        req: Request,
-        res: Response
-    ) => {
+    getProductConversations = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const productId = String(req.params.productId || "");
+            const conversations = await this.chatService.getProductConversations(productId);
 
-        await this.chatService.deleteConversation(
-            req.params.id
-        );
-
-        return res.json({
-
-            success: true,
-
-            message:
-                "Conversation deleted successfully.",
-
-        });
-
+            return res.json({
+                success: true,
+                data: conversations,
+            });
+        } catch (error) {
+            next(error);
+        }
     };
 
+    deleteConversation = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const conversationId = String(req.params.id || "");
+            await this.chatService.deleteConversation(conversationId);
+
+            return res.json({
+                success: true,
+                message: "Conversation deleted successfully.",
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
 }

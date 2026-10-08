@@ -1,15 +1,13 @@
-import { Response } from "express";
+import type { Request, Response } from "express";
 import { ProductService } from "./product.service";
 
-
-const productSeervice = new ProductService()
+const productService = new ProductService();
 
 export async function createProduct(
     req: Request,
     res: Response,
-
 ): Promise<void> {
-    const product = await productSeervice.createPreoduct(req.body)
+    const product = await productService.createPreoduct(req.body)
     res.send({
         status: 201,
         message: "Product created successfully",
@@ -21,7 +19,7 @@ export async function getProducts(
     req: Request,
     res: Response
 ): Promise<void> {
-    const products = await productSeervice.getProducts()
+    const products = await productService.getProducts()
     res.send({
         message: "Products fetched successfully",
         data: products,
@@ -33,7 +31,7 @@ export async function getProduct(
     res: Response
 ): Promise<void> {
     const product =
-        await productSeervice.getProduct(req.params.id);
+        await productService.getProduct(req.params.id);
 
     res.send({
         message: "Product fetched successfully",
@@ -46,7 +44,7 @@ export async function updateProduct(
     res: Response
 ): Promise<void> {
     const product =
-        await productSeervice.updateProduct(
+        await productService.updateProduct(
             req.params.id,
             req.body
         );
@@ -61,7 +59,7 @@ export async function deleteProduct(
     req: Request<{ id: string }>,
     res: Response
 ): Promise<void> {
-    await productSeervice.deleteProduct(req.params.id);
+    await productService.deleteProduct(req.params.id);
 
     res.send({
         message: "Product deleted successfully",

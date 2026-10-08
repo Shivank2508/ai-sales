@@ -4,6 +4,10 @@ export interface ToolContext {
     productId: string;
     question: string;
     conversationId?: string;
+    leadId?: string;
+    campaignId?: string;
+    surveyId?: string;
+    surveySessionId?: string;
 }
 
 export interface Tool {

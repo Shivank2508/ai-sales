@@ -4,9 +4,19 @@
 
 export enum CampaignStatus {
   DRAFT = "draft",
+<<<<<<< HEAD
+  SCHEDULED = "scheduled",
+  RUNNING = "running",
   ACTIVE = "active",
   PAUSED = "paused",
   COMPLETED = "completed",
+  CANCELLED = "cancelled",
+  FAILED = "failed",
+=======
+  ACTIVE = "active",
+  PAUSED = "paused",
+  COMPLETED = "completed",
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
   ARCHIVED = "archived",
 }
 
@@ -18,6 +28,22 @@ export enum CampaignType {
   CUSTOMER_RETENTION = "customer_retention",
 }
 
+<<<<<<< HEAD
+export interface ICampaignStats {
+  totalLeads: number;
+  eligibleLeads: number;
+  startedLeads: number;
+  contactedLeads: number;
+  completedLeads: number;
+  failedLeads: number;
+  skippedLeads: number;
+  conversionRate: number;
+  completionRate: number;
+  responseRate: number;
+}
+
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 export interface ICampaign {
   _id: string;
   name: string;
@@ -27,6 +53,10 @@ export interface ICampaign {
   type: CampaignType;
   status: CampaignStatus;
   product?: string;
+<<<<<<< HEAD
+  action?: string;
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
   startDate?: string;
   endDate?: string;
   targetAudience?: string;
@@ -37,6 +67,11 @@ export interface ICampaign {
   createdAt?: string;
   updatedAt?: string;
 
+<<<<<<< HEAD
+  stats?: ICampaignStats;
+
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
   // Computed metrics
   responsesCount?: number;
   completedResponsesCount?: number;
@@ -54,6 +89,21 @@ export enum SurveyStatus {
 }
 
 export enum QuestionType {
+<<<<<<< HEAD
+  TEXT = "text",
+  LONG_TEXT = "long_text",
+  SINGLE_CHOICE = "single_choice",
+  MULTIPLE_CHOICE = "multiple_choice",
+  YES_NO = "yes_no",
+  NUMBER = "number",
+  RATING = "rating",
+  SCALE = "scale",
+  DATE = "date",
+  TIME = "time",
+  FREQUENCY = "frequency",
+  PRICE = "price",
+  PRODUCT = "product",
+=======
   YES_NO = "yes_no",
   SINGLE_CHOICE = "single_choice",
   MULTIPLE_CHOICE = "multiple_choice",
@@ -61,6 +111,7 @@ export enum QuestionType {
   NUMBER = "number",
   RATING = "rating",
   DATE = "date",
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
   AI_CLASSIFICATION = "ai_classification",
   AI_INTENT = "ai_intent",
 }

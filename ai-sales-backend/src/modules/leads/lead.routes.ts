@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import {
     createLead,
+    importLeads,
     getLeads,
     getLead,
     updateLead,
@@ -11,8 +12,10 @@ import {
 export const leadRouter = Router();
 
 leadRouter.post("/", createLead);
+leadRouter.post("/import", importLeads);
 
 leadRouter.get("/", getLeads);
+
 
 leadRouter.get("/:id", getLead);
 

@@ -13,8 +13,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@langchain/core": "^1.2.4",
+    "@langchain/core": "^1.2.11",
     "@langchain/google-genai": "^2.2.0",
+    "@langchain/langgraph": "^1.4.15",
     "@langchain/openai": "^1.5.5",
     "@pinecone-database/pinecone": "^8.2.0",
     "@qdrant/js-client-rest": "^1.18.0",

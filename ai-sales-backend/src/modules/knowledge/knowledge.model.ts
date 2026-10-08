@@ -13,7 +13,13 @@ const knowledgeSchema = new Schema(
         productId: {
             type: Schema.Types.ObjectId,
             ref: "Product",
-            required: true,
+            required: false,
+        },
+
+        campaignId: {
+            type: Schema.Types.ObjectId,
+            ref: "Campaign",
+            required: false,
         },
 
         type: {

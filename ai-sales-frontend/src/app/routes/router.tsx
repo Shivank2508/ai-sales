@@ -25,18 +25,30 @@ import { AgentDetailPage } from "../../modules/ai-agents/pages/AgentDetailPage";
 import { AgentExecutionPage } from "../../modules/ai-agents/pages/AgentExecutionPage";
 
 import { LeadListPage } from "../../modules/leads/pages/LeadListPage";
+<<<<<<< HEAD
+import { LeadDetailPage } from "../../modules/leads/pages/LeadDetailPage";
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 import { KnowledgeListPage } from "../../modules/knowledge/pages/KnowledgeListPage";
 import { ProductListPage } from "../../modules/products/pages/ProductListPage";
 import { FollowUpListPage } from "../../modules/follow-ups/pages/FollowUpListPage";
 import { ReportsPage } from "../../modules/reports/pages/ReportsPage";
 import { SettingsPage } from "../../modules/settings/pages/SettingsPage";
+<<<<<<< HEAD
+import { InsightsDashboardPage } from "../../modules/insights/pages/InsightsDashboardPage";
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <MainLayout />,
     children: [
+<<<<<<< HEAD
+      { index: true, element: <Navigate to="/dashboard" replace /> },
+=======
       { index: true, element: <Navigate to="/campaigns" replace /> },
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
       { path: "dashboard", element: <DashboardPage /> },
 
       // Campaign Routes
@@ -63,6 +75,12 @@ export const router = createBrowserRouter([
       { path: "campaigns/:campaignId/analytics", element: <AnalyticsPage /> },
       { path: "analytics", element: <AnalyticsPage /> },
 
+<<<<<<< HEAD
+      // AI Business Insights
+      { path: "insights", element: <InsightsDashboardPage /> },
+
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
       // Survey Overview
       { path: "surveys", element: <SurveysListPage /> },
 
@@ -73,13 +91,21 @@ export const router = createBrowserRouter([
 
       // Auxiliary Modules
       { path: "leads", element: <LeadListPage /> },
+<<<<<<< HEAD
+      { path: "leads/:leadId", element: <LeadDetailPage /> },
+=======
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
       { path: "knowledge", element: <KnowledgeListPage /> },
       { path: "products", element: <ProductListPage /> },
       { path: "follow-ups", element: <FollowUpListPage /> },
       { path: "reports", element: <ReportsPage /> },
       { path: "settings", element: <SettingsPage /> },
 
+<<<<<<< HEAD
+      { path: "*", element: <Navigate to="/dashboard" replace /> },
+=======
       { path: "*", element: <Navigate to="/campaigns" replace /> },
+>>>>>>> 94fe2b87bc1486c095acfef3768ddd7065d8625a
     ],
   },
 ]);

@@ -36,18 +36,14 @@ export class VectorRepository {
         namespace: string,
         id: string
     ) {
-        await vectorIndex
-            .namespace(namespace)
-            .deleteOne(id);
+        await (vectorIndex.namespace(namespace) as any).deleteOne(id);
     }
 
     async deleteVectors(
         namespace: string,
         ids: string[]
     ) {
-        await vectorIndex
-            .namespace(namespace)
-            .deleteMany(ids);
+        await (vectorIndex.namespace(namespace) as any).deleteMany(ids);
     }
 
     async deleteNamespace(
@@ -62,8 +58,6 @@ export class VectorRepository {
         namespace: string,
         ids: string[]
     ) {
-        return vectorIndex
-            .namespace(namespace)
-            .fetch(ids);
+        return (vectorIndex.namespace(namespace) as any).fetch(ids);
     }
 }
