@@ -85,6 +85,16 @@ export class TwilioService {
         return phone.slice(0, 3) + "****" + phone.slice(-3);
     }
 
+    private createVoiceResponse(): any {
+        const tw = require("twilio");
+        const VoiceResponseClass =
+            tw.twiml?.VoiceResponse ||
+            tw.default?.twiml?.VoiceResponse ||
+            (twilio as any)?.twiml?.VoiceResponse ||
+            (twilio as any)?.default?.twiml?.VoiceResponse;
+        return new VoiceResponseClass();
+    }
+
     /**
      * Initiates an outbound voice call to a lead
      */
@@ -171,8 +181,7 @@ export class TwilioService {
         surveySessionId?: string;
     }): Promise<string> {
         const { campaignId, leadId, conversationId, surveySessionId } = queryParams;
-        const VoiceResponse = twilio.twiml.VoiceResponse;
-        const response = new VoiceResponse();
+        const response = this.createVoiceResponse();
 
         let initialSpeech = "Hello! I am calling from the AI sales outreach team. Thank you for answering our call!";
         let convId = conversationId;
@@ -215,8 +224,6 @@ export class TwilioService {
             action: gatherUrl,
             method: "POST",
             speechTimeout: "auto",
-            speechModel: "phone_call",
-            enhanced: true,
             language: "en-US",
         });
 
@@ -252,8 +259,7 @@ export class TwilioService {
     }): Promise<string> {
         const { campaignId, leadId, conversationId, surveySessionId } = queryParams;
         const speechResult = body.SpeechResult || body.speechResult || "";
-        const VoiceResponse = twilio.twiml.VoiceResponse;
-        const response = new VoiceResponse();
+        const response = this.createVoiceResponse();
 
         console.log(`[TwilioService] Lead voice input: "${speechResult}"`);
 
@@ -271,8 +277,9 @@ export class TwilioService {
                 action: `${this.publicUrl}/api/voice/twilio/gather-webhook?${repeatQuery}`,
                 method: "POST",
                 speechTimeout: "auto",
+                language: "en-US",
             });
-            gather.say({ voice: "Polly.Joanna" }, "I didn't quite catch that. Could you please repeat?");
+            gather.say({ voice: "Polly.Joanna", language: "en-US" }, "I didn't quite catch that. Could you please repeat?");
             response.hangup();
             return response.toString();
         }
@@ -331,8 +338,6 @@ export class TwilioService {
                 action: `${this.publicUrl}/api/voice/twilio/gather-webhook?${nextQuery}`,
                 method: "POST",
                 speechTimeout: "auto",
-                speechModel: "phone_call",
-                enhanced: true,
                 language: "en-US",
             });
 
