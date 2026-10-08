@@ -136,9 +136,26 @@ export class TwilioController {
         } catch (error: any) {
             console.error("[TwilioController] gatherWebhook error:", error);
             res.type("text/xml");
+            const safeMsg = (error.message || "Thank you for your response.")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
             return res.send(
-                `<?xml version="1.0" encoding="UTF-8"?><Response><Say>Thank you for your response. Goodbye.</Say><Hangup/></Response>`
+                `<?xml version="1.0" encoding="UTF-8"?><Response><Say>${safeMsg}</Say><Hangup/></Response>`
             );
+        }
+    };
+
+    /**
+     * GET /api/voice/twilio/notifications/:callSid
+     */
+    getCallNotifications = async (req: Request, res: Response) => {
+        try {
+            const callSid = String(req.params.callSid || req.query.callSid || "");
+            const result = await this.twilioService.getCallNotifications(callSid);
+            return res.json({ success: true, data: result });
+        } catch (e: any) {
+            return res.status(500).json({ success: false, error: e.message });
         }
     };
 

@@ -67,6 +67,34 @@ export class TwilioService {
     }
 
     /**
+     * Inspects Twilio debugger alerts / error notifications for a call
+     */
+    async getCallNotifications(callSid: string) {
+        if (!this.client) return { error: "Twilio client not initialized" };
+        try {
+            const call = await this.client.calls(callSid).fetch();
+            const notifications = await this.client.calls(callSid).notifications.list({ limit: 10 });
+            return {
+                sid: call.sid,
+                status: call.status,
+                duration: call.duration,
+                to: call.to,
+                from: call.from,
+                notifications: notifications.map((n) => ({
+                    errorCode: n.errorCode,
+                    messageText: n.messageText,
+                    requestUrl: n.requestUrl,
+                    responseBody: n.responseBody,
+                    responseCode: (n as any).responseCode,
+                    messageDate: n.messageDate,
+                })),
+            };
+        } catch (err: any) {
+            return { error: err.message };
+        }
+    }
+
+    /**
      * Normalizes phone number format
      */
     private normalizePhoneNumber(phone: string): string {
