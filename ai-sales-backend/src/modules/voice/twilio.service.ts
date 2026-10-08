@@ -126,9 +126,6 @@ export class TwilioService {
                 to: normalizedTo,
                 from: this.phoneNumber,
                 url: voiceUrl,
-                statusCallback: statusCallbackUrl,
-                statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
-                statusCallbackMethod: "POST",
             });
 
             console.log(`[TwilioService] Call created: ${call.sid} to ${normalizedTo}`);
