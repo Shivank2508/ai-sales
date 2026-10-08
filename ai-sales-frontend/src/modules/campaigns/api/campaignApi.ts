@@ -250,4 +250,33 @@ export const campaignApi = {
     );
     return res.data?.data;
   },
+
+  // CALL LEAD with Real Twilio Phone Call
+  async callLeadWithTwilio(payload: {
+    campaignId: string;
+    leadId?: string;
+    to?: string;
+  }): Promise<{
+    success: boolean;
+    callSid?: string;
+    simulated?: boolean;
+    message: string;
+    to: string;
+  }> {
+    const res = await axiosInstance.post(`/api/campaigns/${payload.campaignId}/twilio-call`, payload);
+    return res.data;
+  },
+
+  // GET Twilio status
+  async getTwilioStatus(): Promise<{
+    configured: boolean;
+    hasAccountSid: boolean;
+    hasAuthToken: boolean;
+    hasPhoneNumber: boolean;
+    phoneNumber?: string | null;
+    publicUrl: string;
+  }> {
+    const res = await axiosInstance.get("/api/voice/twilio/status");
+    return res.data?.data;
+  },
 };

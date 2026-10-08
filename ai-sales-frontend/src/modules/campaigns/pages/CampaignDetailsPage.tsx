@@ -9,6 +9,8 @@ import {
   useEditAICampaign,
   useAddLeadsToCampaign,
   useCallLeadWithAI,
+  useCallLeadWithTwilio,
+  useTwilioStatus,
 } from "../hooks/useCampaigns";
 import { useLeads, useImportLeads } from "../../leads/hooks/useLeads";
 import { useSurveyByCampaign } from "../../surveys/hooks/useSurveys";
@@ -96,6 +98,11 @@ export const CampaignDetailsPage: React.FC = () => {
   const addLeadsMutation = useAddLeadsToCampaign();
   const callLeadMutation = useCallLeadWithAI();
   const importLeadsMutation = useImportLeads();
+  const callTwilioMutation = useCallLeadWithTwilio();
+  const { data: twilioStatus } = useTwilioStatus();
+
+  // Twilio Call Status Notice
+  const [twilioNotice, setTwilioNotice] = useState<{ type: "success" | "warning" | "danger" | "info"; message: string } | null>(null);
 
   // Confirm Modal state
   const [confirmAction, setConfirmAction] = useState<"publish" | "pause" | "archive" | "delete" | null>(null);
@@ -322,6 +329,28 @@ export const CampaignDetailsPage: React.FC = () => {
       }
     } catch (err: any) {
       alert("Failed to initiate voice call: " + err.message);
+    }
+  };
+
+  const handleInitiateTwilioCall = async (lead: any) => {
+    if (!campaign?._id) return;
+    setTwilioNotice(null);
+    try {
+      const res = await callTwilioMutation.mutateAsync({
+        campaignId: campaign._id,
+        leadId: lead._id,
+        to: lead.phone,
+      });
+      setTwilioNotice({
+        type: res.simulated ? "info" : "success",
+        message: res.message || `Twilio call initiated to ${lead.phone || "lead"}!`,
+      });
+      refetchCampaignLeads();
+    } catch (err: any) {
+      setTwilioNotice({
+        type: "danger",
+        message: err.message || "Failed to initiate Twilio call",
+      });
     }
   };
 
@@ -590,6 +619,29 @@ export const CampaignDetailsPage: React.FC = () => {
           </div>
         </div>
         <div className="card-body p-0">
+          {twilioNotice && (
+            <div className={`alert alert-${twilioNotice.type} alert-dismissible fade show m-3 mb-0 d-flex align-items-center justify-content-between`} role="alert">
+              <div className="d-flex align-items-center gap-2">
+                <Radio size={16} />
+                <span>{twilioNotice.message}</span>
+              </div>
+              <button type="button" className="btn-close" onClick={() => setTwilioNotice(null)}></button>
+            </div>
+          )}
+
+          {/* Twilio Telephony Integration Banner */}
+          <div className="p-3 bg-light border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div className="d-flex align-items-center gap-2">
+              <span className={`badge ${twilioStatus?.configured ? "bg-success text-white" : "bg-primary-subtle text-primary border border-primary-subtle"}`}>
+                <Radio size={12} className="me-1" />
+                {twilioStatus?.configured ? `Twilio Connected (${twilioStatus.phoneNumber || "Active"})` : "Twilio Telephony (https://ai-sales-yjn1.onrender.com)"}
+              </span>
+              <span className="text-muted small">
+                Outbound voice calls dial prospects on their real phone numbers and conduct interactive AI surveys.
+              </span>
+            </div>
+          </div>
+
           {campaignLeads.length > 0 ? (
             <div className="table-responsive">
               <table className="table table-hover align-middle mb-0">
@@ -629,14 +681,26 @@ export const CampaignDetailsPage: React.FC = () => {
                           {l.lastAttemptAt ? new Date(l.lastAttemptAt).toLocaleTimeString() : "Not attempted"}
                         </td>
                         <td className="text-end">
-                          <button
-                            className="btn btn-sm btn-success d-inline-flex align-items-center gap-1 shadow-sm px-3"
-                            onClick={() => handleInitiateVoiceCall(leadObj)}
-                            disabled={callLeadMutation.isPending}
-                          >
-                            <PhoneCall size={13} />
-                            <span>Call Now</span>
-                          </button>
+                          <div className="d-flex justify-content-end gap-1">
+                            <button
+                              className="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-sm px-2"
+                              onClick={() => handleInitiateVoiceCall(leadObj)}
+                              disabled={callLeadMutation.isPending}
+                              title="Simulate call in browser"
+                            >
+                              <PhoneCall size={13} />
+                              <span>Web Call</span>
+                            </button>
+                            <button
+                              className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 shadow-sm px-2"
+                              onClick={() => handleInitiateTwilioCall(leadObj)}
+                              disabled={callTwilioMutation.isPending}
+                              title="Trigger real Twilio phone call to prospect"
+                            >
+                              <PhoneForwarded size={13} />
+                              <span>Twilio Call</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

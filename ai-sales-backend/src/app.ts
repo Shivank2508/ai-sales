@@ -16,8 +16,11 @@ import campaignRoutes from "./modules/campaign/routes/campaign.routes";
 import analyticsRoutes from "./modules/analytics/routes/analytics.routes";
 import businessInsightsRoutes from "./modules/insights/routes/business-insights.routes";
 
+import twilioRoutes from "./modules/voice/twilio.routes";
+
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // Health check
@@ -40,6 +43,9 @@ app.use("/api/documents", documentRouter);
 
 app.use("/voice", voiceRoutes);
 app.use("/api/voice", voiceRoutes);
+
+app.use("/voice/twilio", twilioRoutes);
+app.use("/api/voice/twilio", twilioRoutes);
 
 app.use("/chat", chatRoutes);
 app.use("/api/chat", chatRoutes);

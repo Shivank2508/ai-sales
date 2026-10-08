@@ -6,13 +6,15 @@ import { CampaignActionType, CampaignLeadStatus } from "../models/CampaignLead.m
 import { LeadModel } from "../../leads/lead.model";
 import { SurveyExecutionService } from "../../survey/services/SurveyExecutionService";
 import { ChatRepository } from "../../chat/chat.repository";
+import { TwilioService } from "../../voice/twilio.service";
 
 export class CampaignExecutionService {
     constructor(
         private readonly campaignRepository = new CampaignRepository(),
         private readonly campaignLeadRepository = new CampaignLeadRepository(),
         private readonly surveyExecutionService = new SurveyExecutionService(),
-        private readonly chatRepository = new ChatRepository()
+        private readonly chatRepository = new ChatRepository(),
+        private readonly twilioService = new TwilioService()
     ) {}
 
     /**
@@ -141,6 +143,27 @@ export class CampaignExecutionService {
                     }
                 }
 
+                // 3. If action is CALL, trigger real-time Twilio voice call outreach
+                let twilioCallSid: string | undefined;
+                if (action === CampaignActionType.CALL) {
+                    const targetLead = await LeadModel.findById(leadId).lean().exec();
+                    if (targetLead?.phone) {
+                        try {
+                            const callRes = await this.twilioService.initiateCall({
+                                to: targetLead.phone,
+                                campaignId,
+                                leadId,
+                                conversationId,
+                                surveySessionId,
+                            });
+                            twilioCallSid = callRes.callSid;
+                            console.log(`[CampaignExecution] Twilio outreach result for ${targetLead.phone}:`, callRes.message);
+                        } catch (callErr: any) {
+                            console.warn(`[CampaignExecution] Twilio call failed for lead ${leadId}:`, callErr?.message);
+                        }
+                    }
+                }
+
                 // Update lead execution record to CONTACTED
                 await this.campaignLeadRepository.updateStatus(
                     campaignId,
@@ -150,6 +173,7 @@ export class CampaignExecutionService {
                         conversationId: conversationId ? new mongoose.Types.ObjectId(conversationId) : undefined,
                         surveySessionId: surveySessionId ? new mongoose.Types.ObjectId(surveySessionId) : undefined,
                         lastContactedAt: new Date(),
+                        metadata: twilioCallSid ? { twilioCallSid } : undefined,
                     }
                 );
 

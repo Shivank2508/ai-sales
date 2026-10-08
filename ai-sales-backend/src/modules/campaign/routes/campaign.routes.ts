@@ -19,6 +19,7 @@ router.delete("/:id", controller.delete);
 router.get("/:id/leads", controller.getLeads);
 router.post("/:id/leads", controller.addLeads);
 router.post("/:id/call-lead", controller.callLead);
+router.post("/:id/twilio-call", controller.callLeadTwilio);
 
 /*
  * Campaign Lifecycle and Execution

@@ -32,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Leads Database", path: "/leads", icon: Users },
   { label: "Knowledge Base", path: "/knowledge", icon: BookOpen },
   { label: "Analytics & Responses", path: "/analytics", icon: BarChart3 },
+  { label: "Settings & Twilio", path: "/settings", icon: Settings },
 ];
 
 export const Sidebar: React.FC<{ isOpen: boolean; onCloseMobile?: () => void }> = ({

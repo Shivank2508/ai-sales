@@ -3,12 +3,14 @@ import { CampaignService } from "../services/CampaignService";
 import { CampaignExecutionService } from "../services/CampaignExecutionService";
 import { AICampaignService } from "../services/AICampaignService";
 import { LeadModel } from "../../leads/lead.model";
+import { TwilioService } from "../../voice/twilio.service";
 
 export class CampaignController {
     constructor(
         private readonly campaignService = new CampaignService(),
         private readonly executionService = new CampaignExecutionService(),
-        private readonly aiCampaignService = new AICampaignService()
+        private readonly aiCampaignService = new AICampaignService(),
+        private readonly twilioService = new TwilioService()
     ) {}
 
     create = async (req: Request, res: Response, next: NextFunction) => {
@@ -278,6 +280,44 @@ export class CampaignController {
                 data: result,
             });
 
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    callLeadTwilio = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const campaignId = String(req.params.id || "");
+            let leadId = String(req.body.leadId || "");
+            let to = req.body.to || req.body.phone;
+
+            if (!to && leadId) {
+                const lead = await LeadModel.findById(leadId);
+                if (lead?.phone) {
+                    to = lead.phone;
+                }
+            }
+
+            if (!to) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Phone number 'to' or valid leadId with phone number is required",
+                });
+            }
+
+            const result = await this.twilioService.initiateCall({
+                to,
+                campaignId,
+                leadId,
+                conversationId: req.body.conversationId,
+                surveySessionId: req.body.surveySessionId,
+            });
+
+            return res.json({
+                success: true,
+                message: result.message,
+                data: result,
+            });
         } catch (error) {
             next(error);
         }

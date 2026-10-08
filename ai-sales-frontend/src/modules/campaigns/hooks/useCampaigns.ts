@@ -145,3 +145,23 @@ export const useCallLeadWithAI = () => {
     },
   });
 };
+
+export const useCallLeadWithTwilio = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { campaignId: string; leadId?: string; to?: string }) =>
+      campaignApi.callLeadWithTwilio(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CAMPAIGN_KEYS.all });
+    },
+  });
+};
+
+export const useTwilioStatus = () => {
+  return useQuery({
+    queryKey: ["twilio", "status"],
+    queryFn: () => campaignApi.getTwilioStatus(),
+    staleTime: 30000,
+  });
+};
+
