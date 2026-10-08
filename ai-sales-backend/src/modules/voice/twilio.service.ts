@@ -434,6 +434,7 @@ export class TwilioService {
             response.say(
                 {
                     voice: "Polly.Joanna",
+                    language: "en-US",
                 },
                 "Thank you so much for your valuable time today. Have a great day! Goodbye."
             );
