@@ -160,6 +160,18 @@ export class TwilioController {
     };
 
     /**
+     * GET /api/voice/twilio/recent-calls
+     */
+    getRecentCalls = async (req: Request, res: Response) => {
+        try {
+            const result = await this.twilioService.getRecentCalls();
+            return res.json({ success: true, data: result });
+        } catch (e: any) {
+            return res.status(500).json({ success: false, error: e.message });
+        }
+    };
+
+    /**
      * POST /api/voice/twilio/status-callback
      */
     statusCallback = async (req: Request, res: Response) => {

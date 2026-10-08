@@ -6,6 +6,7 @@ const controller = new TwilioController();
 
 router.get("/status", controller.getStatus);
 router.get("/debug", controller.debug);
+router.get("/recent-calls", controller.getRecentCalls);
 router.get("/notifications/:callSid", controller.getCallNotifications);
 router.post("/call", controller.initiateCall);
 

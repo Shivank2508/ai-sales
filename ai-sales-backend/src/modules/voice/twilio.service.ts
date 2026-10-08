@@ -94,6 +94,31 @@ export class TwilioService {
         }
     }
 
+    async getRecentCalls() {
+        if (!this.client) return [];
+        try {
+            const calls = await this.client.calls.list({ limit: 5 });
+            return Promise.all(
+                calls.map(async (c) => {
+                    const notifs = await this.client!.calls(c.sid).notifications.list();
+                    return {
+                        sid: c.sid,
+                        status: c.status,
+                        duration: c.duration,
+                        dateCreated: c.dateCreated,
+                        notifications: notifs.map((n) => ({
+                            errorCode: n.errorCode,
+                            messageText: n.messageText,
+                            requestUrl: n.requestUrl,
+                        })),
+                    };
+                })
+            );
+        } catch (e: any) {
+            return { error: e.message };
+        }
+    }
+
     /**
      * Normalizes phone number format
      */
