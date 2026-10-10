@@ -189,7 +189,7 @@ export class TwilioService {
                 const langStr = opts.language ? ` language="${opts.language}"` : ' language="en-IN"';
                 const hintsStr = opts.hints ? ` hints="${escapeXml(opts.hints)}"` : "";
                 const timeoutAttr = opts.timeout ? ` timeout="${opts.timeout}"` : ' timeout="8"';
-                const speechModelAttr = opts.speechModel ? ` speechModel="${opts.speechModel}"` : ' speechModel="default"';
+                const speechModelAttr = opts.speechModel ? ` speechModel="${opts.speechModel}"` : "";
                 const bargeInAttr = opts.bargeIn !== undefined ? ` bargeIn="${opts.bargeIn}"` : ' bargeIn="false"';
                 const actionOnEmptyAttr = opts.actionOnEmptyResult ? ` actionOnEmptyResult="${opts.actionOnEmptyResult}"` : ' actionOnEmptyResult="true"';
                 const inputAttr = opts.input ? (Array.isArray(opts.input) ? ` input="${opts.input.join(' ')}"` : ` input="${opts.input}"`) : ' input="speech dtmf"';
@@ -356,7 +356,6 @@ export class TwilioService {
             method: "POST",
             speechTimeout: "auto",
             timeout: 8,
-            speechModel: "default",
             bargeIn: false,
             actionOnEmptyResult: true,
             language: "en-IN",
@@ -435,7 +434,6 @@ export class TwilioService {
                 method: "POST",
                 speechTimeout: "auto",
                 timeout: 8,
-                speechModel: "default",
                 bargeIn: false,
                 actionOnEmptyResult: true,
                 language: "en-IN",
@@ -510,7 +508,6 @@ export class TwilioService {
                 method: "POST",
                 speechTimeout: "auto",
                 timeout: 8,
-                speechModel: "default",
                 bargeIn: false,
                 actionOnEmptyResult: true,
                 language: "en-IN",
