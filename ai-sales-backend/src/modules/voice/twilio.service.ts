@@ -185,24 +185,26 @@ export class TwilioService {
             gather: (opts: any) => {
                 const actionStr = opts.action ? ` action="${escapeXml(opts.action)}"` : "";
                 const methodStr = opts.method ? ` method="${opts.method}"` : ' method="POST"';
-                const timeoutStr = opts.speechTimeout ? ` speechTimeout="${opts.speechTimeout}"` : "";
-                const langStr = opts.language ? ` language="${opts.language}"` : ' language="en-US"';
+                const timeoutStr = opts.speechTimeout ? ` speechTimeout="${opts.speechTimeout}"` : ' speechTimeout="3"';
+                const langStr = opts.language ? ` language="${opts.language}"` : ' language="en-IN"';
+                const hintsStr = opts.hints ? ` hints="${escapeXml(opts.hints)}"` : "";
+                const timeoutAttr = opts.timeout ? ` timeout="${opts.timeout}"` : ' timeout="6"';
                 const gatherBody: string[] = [];
 
                 return {
                     say: (sayOpts: any, text?: string) => {
                         const content = typeof sayOpts === "string" ? sayOpts : text || "";
-                        const voice = typeof sayOpts === "object" && sayOpts?.voice ? ` voice="${sayOpts.voice}"` : ' voice="Polly.Joanna"';
-                        const lang = typeof sayOpts === "object" && sayOpts?.language ? ` language="${sayOpts.language}"` : ' language="en-US"';
+                        const voice = typeof sayOpts === "object" && sayOpts?.voice ? ` voice="${sayOpts.voice}"` : ' voice="Polly.Aditi"';
+                        const lang = typeof sayOpts === "object" && sayOpts?.language ? ` language="${sayOpts.language}"` : ' language="en-IN"';
                         gatherBody.push(`<Say${voice}${lang}>${escapeXml(content)}</Say>`);
-                        parts.push(`<Gather input="speech"${actionStr}${methodStr}${timeoutStr}${langStr}>${gatherBody.join("")}</Gather>`);
+                        parts.push(`<Gather input="speech"${actionStr}${methodStr}${timeoutStr}${langStr}${hintsStr}${timeoutAttr}>${gatherBody.join("")}</Gather>`);
                     },
                 };
             },
             say: (opts: any, text?: string) => {
                 const content = typeof opts === "string" ? opts : text || "";
-                const voice = typeof opts === "object" && opts?.voice ? ` voice="${opts.voice}"` : ' voice="Polly.Joanna"';
-                const lang = typeof opts === "object" && opts?.language ? ` language="${opts.language}"` : ' language="en-US"';
+                const voice = typeof opts === "object" && opts?.voice ? ` voice="${opts.voice}"` : ' voice="Polly.Aditi"';
+                const lang = typeof opts === "object" && opts?.language ? ` language="${opts.language}"` : ' language="en-IN"';
                 parts.push(`<Say${voice}${lang}>${escapeXml(content)}</Say>`);
             },
             hangup: () => {
@@ -345,14 +347,16 @@ export class TwilioService {
             input: ["speech"],
             action: gatherUrl,
             method: "POST",
-            speechTimeout: "auto",
-            language: "en-US",
+            speechTimeout: "3",
+            timeout: 6,
+            language: "en-IN",
+            hints: "Tide, Surf Excel, Ariel, Ghadi, Wheel, Rin, detergent powder, orange pack, doorstep, sample, yes, no, haan, haanji, nahi",
         });
 
         gather.say(
             {
-                voice: "Polly.Joanna",
-                language: "en-US",
+                voice: "Polly.Aditi",
+                language: "en-IN",
             },
             initialSpeech
         );
@@ -360,8 +364,8 @@ export class TwilioService {
         // Fallback if no speech was detected
         response.say(
             {
-                voice: "Polly.Joanna",
-                language: "en-US",
+                voice: "Polly.Aditi",
+                language: "en-IN",
             },
             "We did not hear any response. Thank you, and have a wonderful day! Goodbye."
         );
@@ -386,7 +390,7 @@ export class TwilioService {
         console.log(`[TwilioService] Lead voice input: "${speechResult}"`);
 
         if (!speechResult || speechResult.trim().length === 0) {
-            // Prompt again once
+            // Prompt again once politely
             const repeatQuery = new URLSearchParams({
                 ...(campaignId ? { campaignId } : {}),
                 ...(leadId ? { leadId } : {}),
@@ -398,10 +402,19 @@ export class TwilioService {
                 input: ["speech"],
                 action: `${this.publicUrl}/api/voice/twilio/gather-webhook?${repeatQuery}`,
                 method: "POST",
-                speechTimeout: "auto",
-                language: "en-US",
+                speechTimeout: "3",
+                timeout: 6,
+                language: "en-IN",
+                hints: "Tide, Surf Excel, Ariel, Ghadi, Wheel, Rin, detergent powder, orange pack, doorstep, sample, yes, no, haan, haanji, nahi",
             });
-            gather.say({ voice: "Polly.Joanna", language: "en-US" }, "I didn't quite catch that. Could you please repeat?");
+            gather.say({ voice: "Polly.Aditi", language: "en-IN" }, "I didn't quite catch that. Could you please repeat?");
+            response.say(
+                {
+                    voice: "Polly.Aditi",
+                    language: "en-IN",
+                },
+                "Thank you so much for your time. Have a wonderful day! Goodbye."
+            );
             response.hangup();
             return response.toString();
         }
@@ -435,8 +448,8 @@ export class TwilioService {
             // Survey or conversation completed
             response.say(
                 {
-                    voice: "Polly.Joanna",
-                    language: "en-US",
+                    voice: "Polly.Aditi",
+                    language: "en-IN",
                 },
                 aiSpeech
             );
@@ -460,14 +473,16 @@ export class TwilioService {
                 input: ["speech"],
                 action: `${this.publicUrl}/api/voice/twilio/gather-webhook?${nextQuery}`,
                 method: "POST",
-                speechTimeout: "auto",
-                language: "en-US",
+                speechTimeout: "3",
+                timeout: 6,
+                language: "en-IN",
+                hints: "Tide, Surf Excel, Ariel, Ghadi, Wheel, Rin, detergent powder, orange pack, doorstep, sample, yes, no, haan, haanji, nahi",
             });
 
             gather.say(
                 {
-                    voice: "Polly.Joanna",
-                    language: "en-US",
+                    voice: "Polly.Aditi",
+                    language: "en-IN",
                 },
                 aiSpeech
             );
@@ -475,8 +490,8 @@ export class TwilioService {
             // Fallback
             response.say(
                 {
-                    voice: "Polly.Joanna",
-                    language: "en-US",
+                    voice: "Polly.Aditi",
+                    language: "en-IN",
                 },
                 "Thank you so much for your valuable time today. Have a great day! Goodbye."
             );

@@ -11,6 +11,7 @@ import { SurveyQuestionRepository } from "../../survey/repositories/SurveyQuesti
 import { ChatRepository } from "../../chat/chat.repository";
 import { TextToSpeechService } from "../../voice/text-to-speech.service";
 import { AgentService } from "../../agent/agent.service";
+import { deepseek } from "../../../services/ai.openai";
 
 export interface GenerateCampaignInput {
     goal: string;
@@ -1331,7 +1332,58 @@ Return JSON matching this schema:
 
     // =============================================================
     // TIDE – HTH/RURBAN DETERGENT SAMPLING SURVEY PROTOCOL HANDLER
+    // POWERED BY DEEPSEEK-CHAT LLM + FAST DETERMINISTIC FALLBACK
     // =============================================================
+    private async classifyTurnWithDeepSeek(params: {
+        customerReply: string;
+        currentQuestionText: string;
+        currentOrder: number;
+        lastAssistantMsg?: string;
+    }): Promise<{
+        intent: "YES" | "NO" | "TIDE" | "OTHER_BRAND" | "CONFUSED" | "BUSY" | "OPTOUT" | "OTHER";
+        extractedBrand?: string;
+    } | null> {
+        try {
+            const prompt = `You are evaluating a customer's phone response during a Tide detergent market survey in India.
+Current Question Order: ${params.currentOrder}
+Current Question: "${params.currentQuestionText}"
+Previous AI Message: "${params.lastAssistantMsg || ""}"
+Customer Spoken Reply: "${params.customerReply}"
+
+Classify customer response into JSON:
+{
+  "intent": "YES" | "NO" | "TIDE" | "OTHER_BRAND" | "CONFUSED" | "BUSY" | "OPTOUT" | "OTHER",
+  "extractedBrand": "tide" | "surf" | "ariel" | "ghadi" | "fena" | "rin" | "wheel" | "sunlight" | "safed" | "other" | null,
+  "confidence": 0.0 to 1.0
+}
+Note:
+- "haan", "haanji", "liya tha", "yes", "bought it", "ji", "humne liya tha" -> YES
+- "nahi", "nahi liya", "no", "haven't", "na" -> NO
+- Mentioning "tide", "orange pack", "orange packet", "narangi", "tide detergent" -> TIDE
+- "kya bol rahe ho", "who are you", "what is this", "repeat", "what are you talking about" -> CONFUSED
+Return ONLY JSON.`;
+
+            const res = await deepseek.chat.completions.create({
+                model: "deepseek-chat",
+                messages: [
+                    { role: "system", content: "You are a fast intent classifier. Return valid JSON only." },
+                    { role: "user", content: prompt }
+                ],
+                max_tokens: 60,
+                temperature: 0.1,
+                response_format: { type: "json_object" }
+            });
+
+            const content = res.choices[0]?.message?.content;
+            if (content) {
+                return JSON.parse(content);
+            }
+        } catch (err: any) {
+            console.warn("[classifyTurnWithDeepSeek] Note:", err?.message);
+        }
+        return null;
+    }
+
     private async handleTideSurveyTurn(params: {
         lead: any;
         campaign: any;
@@ -1370,12 +1422,34 @@ Return JSON matching this schema:
 
         // Turn 1: Responding to Q1 (Sample Recall)
         if (currentOrder === 1) {
+            const classification = await this.classifyTurnWithDeepSeek({
+                customerReply: customerText,
+                currentQuestionText: currentQuestion?.text || "Doorstep purchase",
+                currentOrder: 1,
+                lastAssistantMsg,
+            });
+
+            const isConfused = classification?.intent === "CONFUSED" ||
+                /\b(what are you talking about|kya bol rahe|who are you|konsa sample|which sample|samajh nahi aaya)\b/i.test(lower);
+
+            if (isConfused) {
+                return {
+                    speechText: "I'm calling regarding the small detergent powder sample pack delivered to your home recently. Did you purchase or receive any detergent powder at your doorstep — Yes or No?",
+                    currentQuestion,
+                    isCompleted: false,
+                };
+            }
+
             const isNo =
-                /^(no|nope|nah|never|not really|negative|didn't|did not|don't remember|dont remember|not me|haven't|havent)\b/i.test(lower) ||
-                /\b(did not buy|didn't buy|dont buy|don't buy|no i did not|no i didn't|did not purchase|haven't purchased)\b/i.test(lower);
+                classification?.intent === "NO" ||
+                /^(no|nope|nah|never|not really|negative|didn't|did not|don't remember|dont remember|not me|haven't|havent|nahi|nahi liya)\b/i.test(lower) ||
+                /\b(did not buy|didn't buy|dont buy|don't buy|no i did not|no i didn't|did not purchase|haven't purchased|nahi kharida)\b/i.test(lower);
+
             const isYes =
-                /^(yes|yep|yeah|sure|definitely|absolutely|affirmative|true|correct|right|of course|bought|purchased|got one)\b/i.test(lower) ||
-                /\b(bought detergent|bought powder|yes i did|yes i bought|bought one|i remember|purchased at doorstep)\b/i.test(lower);
+                classification?.intent === "YES" ||
+                classification?.intent === "TIDE" ||
+                /^(yes|yep|yeah|sure|definitely|absolutely|affirmative|true|correct|right|of course|bought|purchased|got one|haan|haanji|ji|bilkul|liya tha|kharida tha)\b/i.test(lower) ||
+                /\b(bought detergent|bought powder|yes i did|yes i bought|bought one|i remember|purchased at doorstep|liya tha|humne liya)\b/i.test(lower);
 
             if (isNo) {
                 // Condition B: No – End the call!
@@ -1397,7 +1471,7 @@ Return JSON matching this schema:
             }
 
             if (isYes) {
-                // Condition A: Yes – continue to other questions (Q2 Brand Recall)
+                // Condition A: Yes – continue to Q2 (Brand Recall)
                 const q2 = surveyQuestionsList.find(q => q.order === 2);
                 if (surveySessionId) {
                     await this.surveyExecutionService.submitAnswer(surveySessionId, {
@@ -1412,15 +1486,15 @@ Return JSON matching this schema:
                     }
                 }
                 return {
-                    speechText: "Thank you! What brand of detergent did you purchase? Start with asking the colour of the pack.",
+                    speechText: "Thank you! Which brand of detergent did you purchase? Was it Tide, or do you remember the colour of the pack?",
                     currentQuestion: q2,
                     isCompleted: false,
                 };
             }
 
-            // Neither yes nor no - stay on Q1 and clarify
+            // Clarify politely
             return {
-                speechText: "Could you please confirm if you have purchased any detergent powder in the last 1 month at your doorstep — Yes or No?",
+                speechText: "Could you please confirm if you purchased or received any detergent powder at your doorstep — Yes or No?",
                 currentQuestion: currentQuestion,
                 isCompleted: false,
             };
@@ -1428,13 +1502,18 @@ Return JSON matching this schema:
 
         // Turn 2: Responding to Q2 (Brand Recall)
         if (currentOrder === 2) {
-            // Check if respondent is answering the Tide recall aid prompt
             const wasTideAidedPrompt = /remember.*buying.*tide|remember.*purchasing.*tide|bright orange pack|orange pack/i.test(lastAssistantMsg);
 
+            const classification = await this.classifyTurnWithDeepSeek({
+                customerReply: customerText,
+                currentQuestionText: currentQuestion?.text || "Brand recall",
+                currentOrder: 2,
+                lastAssistantMsg,
+            });
+
             if (wasTideAidedPrompt) {
-                const isNo = /^(no|nope|nah|never|not really|only the other|just the other|no i did not|no i didn't|didn't buy tide)\b/i.test(lower);
+                const isNo = classification?.intent === "NO" || /^(no|nope|nah|never|not really|only the other|just the other|no i did not|no i didn't|didn't buy tide|nahi)\b/i.test(lower);
                 if (isNo) {
-                    // Condition: If the answer is no even after this prompt, end the call.
                     if (surveySessionId) {
                         await this.surveyExecutionService.submitAnswer(surveySessionId, {
                             questionId: currentQuestion.questionId,
@@ -1452,7 +1531,7 @@ Return JSON matching this schema:
                     };
                 }
 
-                // If they say yes to the Tide prompt, proceed to Q3
+                // If they say yes to Tide prompt, proceed to Q3
                 const q3 = surveyQuestionsList.find(q => q.order === 3);
                 if (surveySessionId) {
                     await this.surveyExecutionService.submitAnswer(surveySessionId, {
@@ -1474,10 +1553,9 @@ Return JSON matching this schema:
             }
 
             // First time answering Q2
-            const isTide = /\b(tide|orange pack)\b/i.test(lower);
+            const isTide = classification?.intent === "TIDE" || classification?.extractedBrand === "tide" || /\b(tide|orange pack|orange packet|narangi|tide powder)\b/i.test(lower);
 
             if (isTide) {
-                // C. Tide -> Continue to Q3
                 const q3 = surveyQuestionsList.find(q => q.order === 3);
                 if (surveySessionId) {
                     await this.surveyExecutionService.submitAnswer(surveySessionId, {
@@ -1498,9 +1576,9 @@ Return JSON matching this schema:
                 };
             }
 
-            // If the answer is anything other than C. Tide -> Prompt with asking if they remember buying Tide
+            // If the answer is anything other than Tide -> Prompt asking if they remember buying Tide
             return {
-                speechText: "Understood. Do you remember buying Tide detergent powder as well, which comes in a bright orange pack?",
+                speechText: "Understood. Do you remember buying or getting Tide detergent powder as well, which comes in a bright orange pack?",
                 currentQuestion,
                 isCompleted: false,
             };
@@ -1511,11 +1589,10 @@ Return JSON matching this schema:
             const wasOptionsPrompt = /was it surf.*ariel.*tide/i.test(lastAssistantMsg);
             const isCannotRemember =
                 !wasOptionsPrompt &&
-                (/\b(cannot remember|can't remember|dont remember|don't remember|not sure|dont know|don't know|cant recall|don't recall|cannot recall)\b/i.test(lower) ||
+                (/\b(cannot remember|can't remember|dont remember|don't remember|not sure|dont know|don't know|cant recall|don't recall|cannot recall|pata nahi|yaad nahi)\b/i.test(lower) ||
                 /^(no|not sure|can't say|forgot)\b/i.test(lower));
 
             if (isCannotRemember) {
-                // Note: If the answer is k. Cannot remember – prompt with the options.
                 return {
                     speechText: "No problem! Was it Surf, Ariel, Tide, Ghadi, Fena, Rin, Wheel, Sunlight, Safed, or another brand?",
                     currentQuestion,
@@ -1523,7 +1600,6 @@ Return JSON matching this schema:
                 };
             }
 
-            // Map brand
             let selectedBrand = "other_brands";
             if (/\bsurf\b/i.test(lower)) selectedBrand = "surf";
             else if (/\bariel\b/i.test(lower)) selectedBrand = "ariel";
@@ -1558,9 +1634,9 @@ Return JSON matching this schema:
 
         // Turn 4: Responding to Q4 (Repeat Intent)
         if (currentOrder === 4) {
-            const isNo = /^(no|nope|nah|never|will not|won't|not really|do not plan|dont plan)\b/i.test(lower);
-            const isYes = /^(yes|yep|yeah|sure|definitely|absolutely|plan to|will buy|will purchase)\b/i.test(lower);
-            const isMaybe = /^(maybe|perhaps|might|not sure|undecided|possible|possibly)\b/i.test(lower);
+            const isNo = /^(no|nope|nah|never|will not|won't|not really|do not plan|dont plan|nahi|nahi kharidenge)\b/i.test(lower);
+            const isYes = /^(yes|yep|yeah|sure|definitely|absolutely|plan to|will buy|will purchase|haan|haanji|kharidenge)\b/i.test(lower);
+            const isMaybe = /^(maybe|perhaps|might|not sure|undecided|possible|possibly|dekhenge)\b/i.test(lower);
 
             let normalizedAnswer = "not_shared";
             if (isNo) normalizedAnswer = "no";
@@ -1578,13 +1654,12 @@ Return JSON matching this schema:
             }
 
             if (isNo) {
-                // Condition: Only if Q4 is No -> Proceed to Q5
                 const q5 = surveyQuestionsList.find(q => q.order === 5);
                 if (surveySessionId && q5) {
                     await this.surveyExecutionService.moveToNextQuestion(surveySessionId, q5.questionId);
                 }
                 return {
-                    speechText: "You said you will not buy Tide detergent again, please mention why will you not buy it?",
+                    speechText: "You mentioned you will not buy Tide detergent again, could you please mention why?",
                     currentQuestion: q5,
                     isCompleted: false,
                 };
@@ -1604,9 +1679,9 @@ Return JSON matching this schema:
         // Turn 5: Responding to Q5 (Reasons why will not buy - Only if Q4 is No)
         if (currentOrder === 5) {
             let reason = "others";
-            if (/\b(not affordable|expensive|costly|price|pricey|budget)\b/i.test(lower)) {
+            if (/\b(not affordable|expensive|costly|price|pricey|budget|mehenga)\b/i.test(lower)) {
                 reason = "not_affordable";
-            } else if (/\b(tough stains|stains|stain removal|dirty|clean stains)\b/i.test(lower)) {
+            } else if (/\b(tough stains|stains|stain removal|dirty|clean stains|daag)\b/i.test(lower)) {
                 reason = "does_not_remove_tough_stains";
             } else if (/\b(foam|lather|jhag|bubble)\b/i.test(lower)) {
                 reason = "does_not_give_much_foam_or_lather";
@@ -1614,7 +1689,7 @@ Return JSON matching this schema:
                 reason = "does_not_remove_dullness_from_white_clothes";
             } else if (/\b(more quantity|too much powder|high quantity|finishes fast)\b/i.test(lower)) {
                 reason = "have_to_use_more_quantity";
-            } else if (/\b(not available|shop|store|market|cannot find)\b/i.test(lower)) {
+            } else if (/\b(not available|shop|store|market|cannot find|milta nahi)\b/i.test(lower)) {
                 reason = "not_available_in_shops";
             }
 

@@ -48,7 +48,29 @@ export class LLMService {
 
         let rawResponse = "";
 
-        // 1. Try Groq (ultra fast)
+        // 1. Try DeepSeek (primary configured model)
+        const deepseek = this.getDeepSeek();
+        if (deepseek) {
+            try {
+                const response = await deepseek.chat.completions.create({
+                    model: "deepseek-chat",
+                    messages: [
+                        { role: "system", content: fullSystemPrompt },
+                        { role: "user", content: userPrompt },
+                    ],
+                    temperature: 0.1,
+                    response_format: { type: "json_object" },
+                });
+                rawResponse = response.choices[0]?.message?.content || "";
+                if (rawResponse) {
+                    return this.parseJSON<T>(rawResponse);
+                }
+            } catch (err: any) {
+                console.warn("[LLMService] DeepSeek JSON failed, falling back:", err?.message || err);
+            }
+        }
+
+        // 2. Try Groq (fallback fast)
         const groq = this.getGroq();
         if (groq) {
             try {
@@ -67,27 +89,6 @@ export class LLMService {
                 }
             } catch (err: any) {
                 console.warn("[LLMService] Groq JSON failed, falling back:", err?.message || err);
-            }
-        }
-
-        // 2. Try DeepSeek
-        const deepseek = this.getDeepSeek();
-        if (deepseek) {
-            try {
-                const response = await deepseek.chat.completions.create({
-                    model: "deepseek-chat",
-                    messages: [
-                        { role: "system", content: fullSystemPrompt },
-                        { role: "user", content: userPrompt },
-                    ],
-                    temperature: 0.1,
-                });
-                rawResponse = response.choices[0]?.message?.content || "";
-                if (rawResponse) {
-                    return this.parseJSON<T>(rawResponse);
-                }
-            } catch (err: any) {
-                console.warn("[LLMService] DeepSeek JSON failed, falling back:", err?.message || err);
             }
         }
 
@@ -123,26 +124,7 @@ export class LLMService {
         systemPrompt: string,
         userPrompt: string
     ): Promise<string> {
-        // 1. Try Groq
-        const groq = this.getGroq();
-        if (groq) {
-            try {
-                const response = await groq.chat.completions.create({
-                    model: "llama-3.1-8b-instant",
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: userPrompt },
-                    ],
-                    temperature: 0.3,
-                });
-                const text = response.choices[0]?.message?.content?.trim();
-                if (text) return text;
-            } catch (err: any) {
-                console.warn("[LLMService] Groq text failed, falling back:", err?.message || err);
-            }
-        }
-
-        // 2. Try DeepSeek
+        // 1. Try DeepSeek (primary)
         const deepseek = this.getDeepSeek();
         if (deepseek) {
             try {
@@ -158,6 +140,25 @@ export class LLMService {
                 if (text) return text;
             } catch (err: any) {
                 console.warn("[LLMService] DeepSeek text failed, falling back:", err?.message || err);
+            }
+        }
+
+        // 2. Try Groq (fallback)
+        const groq = this.getGroq();
+        if (groq) {
+            try {
+                const response = await groq.chat.completions.create({
+                    model: "llama-3.1-8b-instant",
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt },
+                    ],
+                    temperature: 0.3,
+                });
+                const text = response.choices[0]?.message?.content?.trim();
+                if (text) return text;
+            } catch (err: any) {
+                console.warn("[LLMService] Groq text failed, falling back:", err?.message || err);
             }
         }
 
