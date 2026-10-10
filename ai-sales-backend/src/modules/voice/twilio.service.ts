@@ -214,8 +214,6 @@ export class TwilioService {
                 const hintsStr = opts.hints ? ` hints="${escapeXml(opts.hints)}"` : "";
                 const timeoutAttr = opts.timeout ? ` timeout="${opts.timeout}"` : ' timeout="8"';
                 const speechModelAttr = opts.speechModel ? ` speechModel="${opts.speechModel}"` : "";
-                const bargeInAttr = opts.bargeIn !== undefined ? ` bargeIn="${opts.bargeIn}"` : ' bargeIn="true"';
-                const actionOnEmptyAttr = opts.actionOnEmptyResult ? ` actionOnEmptyResult="${opts.actionOnEmptyResult}"` : ' actionOnEmptyResult="true"';
                 const inputAttr = opts.input ? (Array.isArray(opts.input) ? ` input="${opts.input.join(' ')}"` : ` input="${opts.input}"`) : ' input="speech dtmf"';
                 const gatherBody: string[] = [];
 
@@ -225,7 +223,7 @@ export class TwilioService {
                         const voice = typeof sayOpts === "object" && sayOpts?.voice ? ` voice="${sayOpts.voice}"` : ' voice="Polly.Aditi"';
                         const lang = typeof sayOpts === "object" && sayOpts?.language ? ` language="${sayOpts.language}"` : ' language="en-IN"';
                         gatherBody.push(`<Say${voice}${lang}>${escapeXml(content)}</Say>`);
-                        parts.push(`<Gather${inputAttr}${actionStr}${methodStr}${timeoutStr}${langStr}${hintsStr}${timeoutAttr}${speechModelAttr}${bargeInAttr}${actionOnEmptyAttr}>${gatherBody.join("")}</Gather>`);
+                        parts.push(`<Gather${inputAttr}${actionStr}${methodStr}${timeoutStr}${langStr}${hintsStr}${timeoutAttr}${speechModelAttr}>${gatherBody.join("")}</Gather>`);
                     },
                 };
             },
@@ -379,9 +377,7 @@ export class TwilioService {
             action: gatherUrl,
             method: "POST",
             speechTimeout: "auto",
-            timeout: 10,
-            bargeIn: true,
-            actionOnEmptyResult: true,
+            timeout: 8,
             language: "en-IN",
             hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack, 1, 2",
         });
@@ -394,7 +390,11 @@ export class TwilioService {
             initialSpeech
         );
 
-        response.redirect(gatherUrl);
+        response.say(
+            { voice: "Polly.Aditi", language: "en-IN" },
+            "Thank you so much for your time today. Have a wonderful day! Goodbye."
+        );
+        response.hangup();
 
         return response.toString();
     }
@@ -449,14 +449,16 @@ export class TwilioService {
                 action: repeatUrl,
                 method: "POST",
                 speechTimeout: "auto",
-                timeout: 10,
-                bargeIn: true,
-                actionOnEmptyResult: true,
+                timeout: 8,
                 language: "en-IN",
                 hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack, 1, 2",
             });
             gather.say({ voice: "Polly.Aditi", language: "en-IN" }, "I didn't quite catch that. Please say Yes or No, or press 1 for Yes, 2 for No.");
-            response.redirect(repeatUrl);
+            response.say(
+                { voice: "Polly.Aditi", language: "en-IN" },
+                "Thank you so much for your time today. Have a wonderful day! Goodbye."
+            );
+            response.hangup();
             return response.toString();
         }
 
@@ -516,11 +518,9 @@ export class TwilioService {
                 action: nextGatherUrl,
                 method: "POST",
                 speechTimeout: "auto",
-                timeout: 10,
-                bargeIn: true,
-                actionOnEmptyResult: true,
+                timeout: 8,
                 language: "en-IN",
-                hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack, 1, 2",
+                hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, ghadi, wheel, powder, orange pack, bright orange, 1, 2",
             });
 
             gather.say(
@@ -531,7 +531,11 @@ export class TwilioService {
                 aiSpeech
             );
 
-            response.redirect(nextGatherUrl);
+            response.say(
+                { voice: "Polly.Aditi", language: "en-IN" },
+                "Thank you so much for your time today. Have a wonderful day! Goodbye."
+            );
+            response.hangup();
         }
 
         return response.toString();
