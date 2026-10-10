@@ -355,7 +355,7 @@ export class TwilioService {
             action: gatherUrl,
             method: "POST",
             speechTimeout: "auto",
-            timeout: 8,
+            timeout: 10,
             bargeIn: true,
             actionOnEmptyResult: true,
             language: "en-IN",
@@ -369,6 +369,8 @@ export class TwilioService {
             },
             initialSpeech
         );
+
+        response.redirect(gatherUrl);
 
         return response.toString();
     }
@@ -423,13 +425,14 @@ export class TwilioService {
                 action: repeatUrl,
                 method: "POST",
                 speechTimeout: "auto",
-                timeout: 8,
+                timeout: 10,
                 bargeIn: true,
                 actionOnEmptyResult: true,
                 language: "en-IN",
                 hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack, 1, 2",
             });
             gather.say({ voice: "Polly.Aditi", language: "en-IN" }, "I didn't quite catch that. Please say Yes or No, or press 1 for Yes, 2 for No.");
+            response.redirect(repeatUrl);
             return response.toString();
         }
 
@@ -489,7 +492,7 @@ export class TwilioService {
                 action: nextGatherUrl,
                 method: "POST",
                 speechTimeout: "auto",
-                timeout: 8,
+                timeout: 10,
                 bargeIn: true,
                 actionOnEmptyResult: true,
                 language: "en-IN",
@@ -503,6 +506,8 @@ export class TwilioService {
                 },
                 aiSpeech
             );
+
+            response.redirect(nextGatherUrl);
         }
 
         return response.toString();
