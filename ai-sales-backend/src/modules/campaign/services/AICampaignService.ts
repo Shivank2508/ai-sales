@@ -1420,36 +1420,15 @@ Return ONLY JSON.`;
 
         // Turn 1: Responding to Q1 (Sample Recall)
         if (currentOrder === 1) {
-            const classification = await this.classifyTurnWithDeepSeek({
-                customerReply: customerText,
-                currentQuestionText: currentQuestion?.text || "Doorstep purchase",
-                currentOrder: 1,
-                lastAssistantMsg,
-            });
-
-            const isConfused = classification?.intent === "CONFUSED" ||
-                /\b(what are you talking about|kya bol rahe|who are you|konsa sample|which sample|samajh nahi aaya)\b/i.test(lower);
-
-            if (isConfused) {
-                return {
-                    speechText: "I'm calling regarding the small detergent powder sample pack delivered to your home recently. Did you purchase or receive any detergent powder at your doorstep — please say Yes or No, or press 1 for Yes, 2 for No.",
-                    currentQuestion,
-                    isCompleted: false,
-                };
-            }
-
-            const isNo =
-                classification?.intent === "NO" ||
+            const isNoQuick =
                 /^(no|nope|nah|never|not really|negative|didn't|did not|don't remember|dont remember|not me|haven't|havent|nahi|nahi liya|2)\b/i.test(lower) ||
                 /\b(did not buy|didn't buy|dont buy|don't buy|no i did not|no i didn't|did not purchase|haven't purchased|nahi kharida)\b/i.test(lower);
 
-            const isYes =
-                classification?.intent === "YES" ||
-                classification?.intent === "TIDE" ||
+            const isYesQuick =
                 /^(yes|yep|yeah|sure|definitely|absolutely|affirmative|true|correct|right|of course|bought|purchased|got one|haan|haanji|ji|bilkul|liya tha|kharida tha|1)\b/i.test(lower) ||
-                /\b(bought detergent|bought powder|yes i did|yes i bought|bought one|i remember|purchased at doorstep|liya tha|humne liya)\b/i.test(lower);
+                /\b(bought detergent|bought powder|yes i did|yes i bought|bought one|i remember|purchased at doorstep|liya tha|humne liya|purchased|i purchased)\b/i.test(lower);
 
-            if (isNo) {
+            if (isNoQuick) {
                 // Condition B: No – End the call!
                 if (surveySessionId) {
                     await this.surveyExecutionService.submitAnswer(surveySessionId, {
@@ -1468,7 +1447,7 @@ Return ONLY JSON.`;
                 };
             }
 
-            if (isYes) {
+            if (isYesQuick) {
                 // Condition A: Yes – continue to Q2 (Brand Recall)
                 const q2 = surveyQuestionsList.find(q => q.order === 2);
                 if (surveySessionId) {
@@ -1490,10 +1469,49 @@ Return ONLY JSON.`;
                 };
             }
 
-            // Clarify politely
+            // Fallback for complex speech
+            const classification = await this.classifyTurnWithDeepSeek({
+                customerReply: customerText,
+                currentQuestionText: currentQuestion?.text || "Doorstep purchase",
+                currentOrder: 1,
+                lastAssistantMsg,
+            });
+
+            if (classification?.intent === "NO") {
+                if (surveySessionId) {
+                    await this.surveyExecutionService.submitAnswer(surveySessionId, {
+                        questionId: currentQuestion.questionId,
+                        rawAnswer: customerText,
+                        normalizedAnswer: "no",
+                        answerType: "yes_no",
+                        confidence: 1.0,
+                    });
+                    await this.surveyExecutionService.completeSurvey(surveySessionId);
+                }
+                return {
+                    speechText: "Understood. Thank you so much for your time today. Have a wonderful day!",
+                    currentQuestion: null,
+                    isCompleted: true,
+                };
+            }
+
+            // Default to Yes and proceed
+            const q2 = surveyQuestionsList.find(q => q.order === 2);
+            if (surveySessionId) {
+                await this.surveyExecutionService.submitAnswer(surveySessionId, {
+                    questionId: currentQuestion.questionId,
+                    rawAnswer: customerText,
+                    normalizedAnswer: "yes",
+                    answerType: "yes_no",
+                    confidence: 0.9,
+                });
+                if (q2) {
+                    await this.surveyExecutionService.moveToNextQuestion(surveySessionId, q2.questionId);
+                }
+            }
             return {
-                speechText: "Could you please confirm if you purchased or received any detergent powder at your doorstep — Yes or No?",
-                currentQuestion: currentQuestion,
+                speechText: "Thank you! Which brand of detergent did you purchase? Was it Tide, or do you remember the colour of the pack?",
+                currentQuestion: q2,
                 isCompleted: false,
             };
         }
@@ -1502,57 +1520,8 @@ Return ONLY JSON.`;
         if (currentOrder === 2) {
             const wasTideAidedPrompt = /remember.*buying.*tide|remember.*purchasing.*tide|bright orange pack|orange pack/i.test(lastAssistantMsg);
 
-            const classification = await this.classifyTurnWithDeepSeek({
-                customerReply: customerText,
-                currentQuestionText: currentQuestion?.text || "Brand recall",
-                currentOrder: 2,
-                lastAssistantMsg,
-            });
-
-            if (wasTideAidedPrompt) {
-                const isNo = classification?.intent === "NO" || /^(no|nope|nah|never|not really|only the other|just the other|no i did not|no i didn't|didn't buy tide|nahi)\b/i.test(lower);
-                if (isNo) {
-                    if (surveySessionId) {
-                        await this.surveyExecutionService.submitAnswer(surveySessionId, {
-                            questionId: currentQuestion.questionId,
-                            rawAnswer: customerText,
-                            normalizedAnswer: "other_brands",
-                            answerType: "single_choice",
-                            confidence: 1.0,
-                        });
-                        await this.surveyExecutionService.completeSurvey(surveySessionId);
-                    }
-                    return {
-                        speechText: "Understood. Thank you so much for your time and feedback today. Have a wonderful day!",
-                        currentQuestion: null,
-                        isCompleted: true,
-                    };
-                }
-
-                // If they say yes to Tide prompt, proceed to Q3
-                const q3 = surveyQuestionsList.find(q => q.order === 3);
-                if (surveySessionId) {
-                    await this.surveyExecutionService.submitAnswer(surveySessionId, {
-                        questionId: currentQuestion.questionId,
-                        rawAnswer: customerText,
-                        normalizedAnswer: "tide",
-                        answerType: "single_choice",
-                        confidence: 1.0,
-                    });
-                    if (q3) {
-                        await this.surveyExecutionService.moveToNextQuestion(surveySessionId, q3.questionId);
-                    }
-                }
-                return {
-                    speechText: "Great! Which brand of detergent did you use the most in the last 1 year before getting the Tide sample?",
-                    currentQuestion: q3,
-                    isCompleted: false,
-                };
-            }
-
-            // First time answering Q2
-            const isTide = classification?.intent === "TIDE" || classification?.extractedBrand === "tide" || /\b(tide|orange pack|orange packet|narangi|tide powder)\b/i.test(lower);
-
+            // Fast check for Tide or orange pack
+            const isTide = /\b(tide|orange pack|orange packet|narangi|tide powder|bright orange)\b/i.test(lower);
             if (isTide) {
                 const q3 = surveyQuestionsList.find(q => q.order === 3);
                 if (surveySessionId) {
@@ -1574,7 +1543,48 @@ Return ONLY JSON.`;
                 };
             }
 
-            // If the answer is anything other than Tide -> Prompt asking if they remember buying Tide
+            if (wasTideAidedPrompt) {
+                const isNo = /^(no|nope|nah|never|not really|only the other|just the other|no i did not|no i didn't|didn't buy tide|nahi|2)\b/i.test(lower);
+                if (isNo) {
+                    if (surveySessionId) {
+                        await this.surveyExecutionService.submitAnswer(surveySessionId, {
+                            questionId: currentQuestion.questionId,
+                            rawAnswer: customerText,
+                            normalizedAnswer: "other_brands",
+                            answerType: "single_choice",
+                            confidence: 1.0,
+                        });
+                        await this.surveyExecutionService.completeSurvey(surveySessionId);
+                    }
+                    return {
+                        speechText: "Understood. Thank you so much for your time and feedback today. Have a wonderful day!",
+                        currentQuestion: null,
+                        isCompleted: true,
+                    };
+                }
+
+                // If they say yes to Tide aided prompt, proceed to Q3
+                const q3 = surveyQuestionsList.find(q => q.order === 3);
+                if (surveySessionId) {
+                    await this.surveyExecutionService.submitAnswer(surveySessionId, {
+                        questionId: currentQuestion.questionId,
+                        rawAnswer: customerText,
+                        normalizedAnswer: "tide",
+                        answerType: "single_choice",
+                        confidence: 1.0,
+                    });
+                    if (q3) {
+                        await this.surveyExecutionService.moveToNextQuestion(surveySessionId, q3.questionId);
+                    }
+                }
+                return {
+                    speechText: "Great! Which brand of detergent did you use the most in the last 1 year before getting the Tide sample?",
+                    currentQuestion: q3,
+                    isCompleted: false,
+                };
+            }
+
+            // First time saying another brand (or anything else) -> prompt with Tide aided recall
             return {
                 speechText: "Understood. Do you remember buying or getting Tide detergent powder as well, which comes in a bright orange pack?",
                 currentQuestion,
