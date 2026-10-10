@@ -137,6 +137,30 @@ export class TwilioService {
     }
 
     /**
+     * Inspects Twilio Monitor Alerts (Debugger Error Log)
+     */
+    async getMonitorAlerts() {
+        if (!this.client) return { error: "Twilio client not initialized" };
+        try {
+            const alerts = await (this.client as any).monitor.v1.alerts.list({ limit: 10 });
+            return alerts.map((a: any) => ({
+                sid: a.sid,
+                errorCode: a.errorCode,
+                logLevel: a.logLevel,
+                alertText: a.alertText,
+                requestUrl: a.requestUrl,
+                responseBody: a.responseBody?.slice(0, 500),
+                responseCode: a.responseCode,
+                dateCreated: a.dateCreated,
+                resourceSid: a.resourceSid,
+                moreInfo: a.moreInfo,
+            }));
+        } catch (e: any) {
+            return { error: e.message };
+        }
+    }
+
+    /**
      * Normalizes phone number format
      */
     private normalizePhoneNumber(phone: string): string {

@@ -164,6 +164,18 @@ export class TwilioController {
     };
 
     /**
+     * GET /api/voice/twilio/alerts
+     */
+    getAlerts = async (req: Request, res: Response) => {
+        try {
+            const data = await this.twilioService.getMonitorAlerts();
+            return res.json({ success: true, data });
+        } catch (e: any) {
+            return res.status(500).json({ success: false, error: e.message });
+        }
+    };
+
+    /**
      * POST /api/voice/twilio/status-callback
      */
     statusCallback = async (req: Request, res: Response) => {
