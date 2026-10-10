@@ -1406,11 +1406,9 @@ Return ONLY JSON.`;
         // Turn 0: Initial call greeting + Q1 (Doorstep sample purchase)
         if (!customerReply || !customerReply.trim()) {
             const leadName = lead.name || lead.firstName || "there";
-            const dateStamp = lead.purchaseDate || lead.orderDate || (lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "");
-            const dateAid = dateStamp ? ` (recorded around ${dateStamp})` : "";
             const q1 = surveyQuestionsList.find(q => q.order === 1) || currentQuestion;
             return {
-                speechText: `Hello ${leadName}! I'm calling from Tide regarding detergent powder doorstep sampling. Have you purchased any detergent powder in the last 1 month at your doorstep${dateAid}?`,
+                speechText: `Hello ${leadName}! I'm calling from Tide regarding detergent powder doorstep sampling. Have you purchased or tried any detergent powder at your doorstep in the last month? Please say Yes or No, or press 1 for Yes, 2 for No.`,
                 currentQuestion: q1,
                 isCompleted: false,
             };
@@ -1434,7 +1432,7 @@ Return ONLY JSON.`;
 
             if (isConfused) {
                 return {
-                    speechText: "I'm calling regarding the small detergent powder sample pack delivered to your home recently. Did you purchase or receive any detergent powder at your doorstep — Yes or No?",
+                    speechText: "I'm calling regarding the small detergent powder sample pack delivered to your home recently. Did you purchase or receive any detergent powder at your doorstep — please say Yes or No, or press 1 for Yes, 2 for No.",
                     currentQuestion,
                     isCompleted: false,
                 };
@@ -1442,13 +1440,13 @@ Return ONLY JSON.`;
 
             const isNo =
                 classification?.intent === "NO" ||
-                /^(no|nope|nah|never|not really|negative|didn't|did not|don't remember|dont remember|not me|haven't|havent|nahi|nahi liya)\b/i.test(lower) ||
+                /^(no|nope|nah|never|not really|negative|didn't|did not|don't remember|dont remember|not me|haven't|havent|nahi|nahi liya|2)\b/i.test(lower) ||
                 /\b(did not buy|didn't buy|dont buy|don't buy|no i did not|no i didn't|did not purchase|haven't purchased|nahi kharida)\b/i.test(lower);
 
             const isYes =
                 classification?.intent === "YES" ||
                 classification?.intent === "TIDE" ||
-                /^(yes|yep|yeah|sure|definitely|absolutely|affirmative|true|correct|right|of course|bought|purchased|got one|haan|haanji|ji|bilkul|liya tha|kharida tha)\b/i.test(lower) ||
+                /^(yes|yep|yeah|sure|definitely|absolutely|affirmative|true|correct|right|of course|bought|purchased|got one|haan|haanji|ji|bilkul|liya tha|kharida tha|1)\b/i.test(lower) ||
                 /\b(bought detergent|bought powder|yes i did|yes i bought|bought one|i remember|purchased at doorstep|liya tha|humne liya)\b/i.test(lower);
 
             if (isNo) {

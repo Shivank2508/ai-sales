@@ -185,10 +185,13 @@ export class TwilioService {
             gather: (opts: any) => {
                 const actionStr = opts.action ? ` action="${escapeXml(opts.action)}"` : "";
                 const methodStr = opts.method ? ` method="${opts.method}"` : ' method="POST"';
-                const timeoutStr = opts.speechTimeout ? ` speechTimeout="${opts.speechTimeout}"` : ' speechTimeout="3"';
+                const timeoutStr = opts.speechTimeout ? ` speechTimeout="${opts.speechTimeout}"` : ' speechTimeout="2"';
                 const langStr = opts.language ? ` language="${opts.language}"` : ' language="en-IN"';
                 const hintsStr = opts.hints ? ` hints="${escapeXml(opts.hints)}"` : "";
-                const timeoutAttr = opts.timeout ? ` timeout="${opts.timeout}"` : ' timeout="6"';
+                const timeoutAttr = opts.timeout ? ` timeout="${opts.timeout}"` : ' timeout="5"';
+                const speechModelAttr = opts.speechModel ? ` speechModel="${opts.speechModel}"` : ' speechModel="phone_call"';
+                const actionOnEmptyAttr = opts.actionOnEmptyResult ? ` actionOnEmptyResult="${opts.actionOnEmptyResult}"` : ' actionOnEmptyResult="true"';
+                const inputAttr = opts.input ? (Array.isArray(opts.input) ? ` input="${opts.input.join(' ')}"` : ` input="${opts.input}"`) : ' input="speech dtmf"';
                 const gatherBody: string[] = [];
 
                 return {
@@ -197,7 +200,7 @@ export class TwilioService {
                         const voice = typeof sayOpts === "object" && sayOpts?.voice ? ` voice="${sayOpts.voice}"` : ' voice="Polly.Aditi"';
                         const lang = typeof sayOpts === "object" && sayOpts?.language ? ` language="${sayOpts.language}"` : ' language="en-IN"';
                         gatherBody.push(`<Say${voice}${lang}>${escapeXml(content)}</Say>`);
-                        parts.push(`<Gather input="speech"${actionStr}${methodStr}${timeoutStr}${langStr}${hintsStr}${timeoutAttr}>${gatherBody.join("")}</Gather>`);
+                        parts.push(`<Gather${inputAttr}${actionStr}${methodStr}${timeoutStr}${langStr}${hintsStr}${timeoutAttr}${speechModelAttr}${actionOnEmptyAttr}>${gatherBody.join("")}</Gather>`);
                     },
                 };
             },
@@ -206,6 +209,9 @@ export class TwilioService {
                 const voice = typeof opts === "object" && opts?.voice ? ` voice="${opts.voice}"` : ' voice="Polly.Aditi"';
                 const lang = typeof opts === "object" && opts?.language ? ` language="${opts.language}"` : ' language="en-IN"';
                 parts.push(`<Say${voice}${lang}>${escapeXml(content)}</Say>`);
+            },
+            redirect: (url: string) => {
+                parts.push(`<Redirect>${escapeXml(url)}</Redirect>`);
             },
             hangup: () => {
                 parts.push("<Hangup/>");
@@ -342,15 +348,17 @@ export class TwilioService {
 
         const gatherUrl = `${this.publicUrl}/api/voice/twilio/gather-webhook?${nextQuery}`;
 
-        // Create interactive speech gather
+        // Create interactive speech + keypad DTMF gather
         const gather = response.gather({
-            input: ["speech"],
+            input: ["speech", "dtmf"],
             action: gatherUrl,
             method: "POST",
-            speechTimeout: "3",
-            timeout: 6,
+            speechTimeout: "2",
+            timeout: 5,
+            speechModel: "phone_call",
+            actionOnEmptyResult: true,
             language: "en-IN",
-            hints: "Tide, Surf Excel, Ariel, Ghadi, Wheel, Rin, detergent powder, orange pack, doorstep, sample, yes, no, haan, haanji, nahi",
+            hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack",
         });
 
         gather.say(
@@ -361,15 +369,15 @@ export class TwilioService {
             initialSpeech
         );
 
-        // Fallback if no speech was detected
+        // Fallback retry if no speech was detected
         response.say(
             {
                 voice: "Polly.Aditi",
                 language: "en-IN",
             },
-            "We did not hear any response. Thank you, and have a wonderful day! Goodbye."
+            "I didn't quite hear you. Could you please answer with Yes or No?"
         );
-        response.hangup();
+        response.redirect(gatherUrl);
 
         return response.toString();
     }
@@ -385,12 +393,20 @@ export class TwilioService {
     }): Promise<string> {
         const { campaignId, leadId, conversationId, surveySessionId } = queryParams;
         const speechResult = body.SpeechResult || body.speechResult || "";
+        const digits = body.Digits || body.digits || "";
         const response = this.createVoiceResponse();
 
-        console.log(`[TwilioService] Lead voice input: "${speechResult}"`);
+        let customerInput = speechResult.trim();
+        if (!customerInput && digits) {
+            if (digits === "1") customerInput = "Yes";
+            else if (digits === "2") customerInput = "No";
+            else customerInput = digits;
+        }
 
-        if (!speechResult || speechResult.trim().length === 0) {
-            // Prompt again once politely
+        console.log(`[TwilioService] Lead voice input: "${customerInput}" (speech: "${speechResult}", digits: "${digits}")`);
+
+        if (!customerInput) {
+            // Prompt again once politely with keypad alternative
             const repeatQuery = new URLSearchParams({
                 ...(campaignId ? { campaignId } : {}),
                 ...(leadId ? { leadId } : {}),
@@ -398,16 +414,19 @@ export class TwilioService {
                 ...(surveySessionId ? { surveySessionId } : {}),
             }).toString();
 
+            const repeatUrl = `${this.publicUrl}/api/voice/twilio/gather-webhook?${repeatQuery}`;
             const gather = response.gather({
-                input: ["speech"],
-                action: `${this.publicUrl}/api/voice/twilio/gather-webhook?${repeatQuery}`,
+                input: ["speech", "dtmf"],
+                action: repeatUrl,
                 method: "POST",
-                speechTimeout: "3",
-                timeout: 6,
+                speechTimeout: "2",
+                timeout: 5,
+                speechModel: "phone_call",
+                actionOnEmptyResult: true,
                 language: "en-IN",
-                hints: "Tide, Surf Excel, Ariel, Ghadi, Wheel, Rin, detergent powder, orange pack, doorstep, sample, yes, no, haan, haanji, nahi",
+                hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack",
             });
-            gather.say({ voice: "Polly.Aditi", language: "en-IN" }, "I didn't quite catch that. Could you please repeat?");
+            gather.say({ voice: "Polly.Aditi", language: "en-IN" }, "I didn't quite catch that. Could you please say Yes or No, or press 1 for Yes, 2 for No?");
             response.say(
                 {
                     voice: "Polly.Aditi",
@@ -428,7 +447,7 @@ export class TwilioService {
         if (campaignId && leadId) {
             try {
                 const aiResult = await this.aiCampaignService.callLeadWithAI(campaignId, leadId, {
-                    customerReply: speechResult.trim(),
+                    customerReply: customerInput,
                     conversationId: convId,
                     surveySessionId: sessId,
                     skipTTS: true,
@@ -469,14 +488,17 @@ export class TwilioService {
                 ...(sessId ? { surveySessionId: sessId } : {}),
             }).toString();
 
+            const nextGatherUrl = `${this.publicUrl}/api/voice/twilio/gather-webhook?${nextQuery}`;
             const gather = response.gather({
-                input: ["speech"],
-                action: `${this.publicUrl}/api/voice/twilio/gather-webhook?${nextQuery}`,
+                input: ["speech", "dtmf"],
+                action: nextGatherUrl,
                 method: "POST",
-                speechTimeout: "3",
-                timeout: 6,
+                speechTimeout: "2",
+                timeout: 5,
+                speechModel: "phone_call",
+                actionOnEmptyResult: true,
                 language: "en-IN",
-                hints: "Tide, Surf Excel, Ariel, Ghadi, Wheel, Rin, detergent powder, orange pack, doorstep, sample, yes, no, haan, haanji, nahi",
+                hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack",
             });
 
             gather.say(
@@ -487,15 +509,15 @@ export class TwilioService {
                 aiSpeech
             );
 
-            // Fallback
+            // Fallback retry
             response.say(
                 {
                     voice: "Polly.Aditi",
                     language: "en-IN",
                 },
-                "Thank you so much for your valuable time today. Have a great day! Goodbye."
+                "I didn't hear your response. Could you please answer once more?"
             );
-            response.hangup();
+            response.redirect(nextGatherUrl);
         }
 
         return response.toString();
