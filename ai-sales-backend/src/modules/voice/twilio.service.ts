@@ -190,7 +190,7 @@ export class TwilioService {
                 const hintsStr = opts.hints ? ` hints="${escapeXml(opts.hints)}"` : "";
                 const timeoutAttr = opts.timeout ? ` timeout="${opts.timeout}"` : ' timeout="8"';
                 const speechModelAttr = opts.speechModel ? ` speechModel="${opts.speechModel}"` : "";
-                const bargeInAttr = opts.bargeIn !== undefined ? ` bargeIn="${opts.bargeIn}"` : ' bargeIn="false"';
+                const bargeInAttr = opts.bargeIn !== undefined ? ` bargeIn="${opts.bargeIn}"` : ' bargeIn="true"';
                 const actionOnEmptyAttr = opts.actionOnEmptyResult ? ` actionOnEmptyResult="${opts.actionOnEmptyResult}"` : ' actionOnEmptyResult="true"';
                 const inputAttr = opts.input ? (Array.isArray(opts.input) ? ` input="${opts.input.join(' ')}"` : ` input="${opts.input}"`) : ' input="speech dtmf"';
                 const gatherBody: string[] = [];
@@ -356,10 +356,10 @@ export class TwilioService {
             method: "POST",
             speechTimeout: "auto",
             timeout: 8,
-            bargeIn: false,
+            bargeIn: true,
             actionOnEmptyResult: true,
             language: "en-IN",
-            hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack",
+            hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack, 1, 2",
         });
 
         gather.say(
@@ -369,16 +369,6 @@ export class TwilioService {
             },
             initialSpeech
         );
-
-        // Safe fallback if user disconnects or gather ends
-        response.say(
-            {
-                voice: "Polly.Aditi",
-                language: "en-IN",
-            },
-            "Thank you so much for your time. Have a wonderful day! Goodbye."
-        );
-        response.hangup();
 
         return response.toString();
     }
@@ -434,20 +424,12 @@ export class TwilioService {
                 method: "POST",
                 speechTimeout: "auto",
                 timeout: 8,
-                bargeIn: false,
+                bargeIn: true,
                 actionOnEmptyResult: true,
                 language: "en-IN",
-                hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack",
+                hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack, 1, 2",
             });
             gather.say({ voice: "Polly.Aditi", language: "en-IN" }, "I didn't quite catch that. Please say Yes or No, or press 1 for Yes, 2 for No.");
-            response.say(
-                {
-                    voice: "Polly.Aditi",
-                    language: "en-IN",
-                },
-                "Thank you so much for your time. Have a wonderful day! Goodbye."
-            );
-            response.hangup();
             return response.toString();
         }
 
@@ -508,10 +490,10 @@ export class TwilioService {
                 method: "POST",
                 speechTimeout: "auto",
                 timeout: 8,
-                bargeIn: false,
+                bargeIn: true,
                 actionOnEmptyResult: true,
                 language: "en-IN",
-                hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack",
+                hints: "yes, no, haan, haanji, nahi, tide, surf, ariel, powder, orange pack, 1, 2",
             });
 
             gather.say(
@@ -521,16 +503,6 @@ export class TwilioService {
                 },
                 aiSpeech
             );
-
-            // Safe fallback if user disconnects
-            response.say(
-                {
-                    voice: "Polly.Aditi",
-                    language: "en-IN",
-                },
-                "Thank you so much for your time. Have a wonderful day! Goodbye."
-            );
-            response.hangup();
         }
 
         return response.toString();
