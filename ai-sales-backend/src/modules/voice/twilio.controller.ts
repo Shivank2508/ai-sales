@@ -108,12 +108,8 @@ export class TwilioController {
         } catch (error: any) {
             console.error("[TwilioController] voiceWebhook error:", error);
             res.type("text/xml");
-            const safeMsg = (error.message || "An error occurred connecting your call.")
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;");
             return res.send(
-                `<?xml version="1.0" encoding="UTF-8"?><Response><Say>${safeMsg}</Say><Hangup/></Response>`
+                `<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Aditi" language="en-IN">Hello! Thank you for taking our call. Have a wonderful day!</Say><Hangup/></Response>`
             );
         }
     };
@@ -136,12 +132,8 @@ export class TwilioController {
         } catch (error: any) {
             console.error("[TwilioController] gatherWebhook error:", error);
             res.type("text/xml");
-            const safeMsg = (error.message || "Thank you for your response.")
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;");
             return res.send(
-                `<?xml version="1.0" encoding="UTF-8"?><Response><Say>${safeMsg}</Say><Hangup/></Response>`
+                `<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Aditi" language="en-IN">Thank you so much for sharing your feedback with us. Have a wonderful day! Goodbye.</Say><Hangup/></Response>`
             );
         }
     };

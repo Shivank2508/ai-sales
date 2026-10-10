@@ -14,6 +14,8 @@ router.post("/call", controller.initiateCall);
 router.post("/voice-webhook", controller.voiceWebhook);
 router.get("/voice-webhook", controller.voiceWebhook);
 router.post("/gather-webhook", controller.gatherWebhook);
+router.get("/gather-webhook", controller.gatherWebhook);
 router.post("/status-callback", controller.statusCallback);
+router.get("/status-callback", controller.statusCallback);
 
 export default router;
